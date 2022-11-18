@@ -28,3 +28,5 @@ POSTGRES_PORT=5432
 POSTGRES_DATABASE_NAME=app
 ```
 The tables schema you need to run can be found in `backend/schema.sql`
+
+The GraphQL API is then available on http://localhost:8000/graphql
