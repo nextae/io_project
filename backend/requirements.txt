@@ -1,0 +1,9 @@
+strawberry-graphql
+fastapi~=0.85.1
+uvicorn[standard]
+broadcaster~=0.2.0
+sqlalchemy~=1.4.42
+asyncpg
+orjson~=3.8.1
+python-dotenv
+passlib[bcrypt]

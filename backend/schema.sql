@@ -1,0 +1,42 @@
+BEGIN;
+
+CREATE TYPE role AS ENUM ('owner', 'moderator', 'member');
+
+CREATE TABLE IF NOT EXISTS servers (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(32) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS channels (
+    id SERIAL PRIMARY KEY,
+    server_id INTEGER NOT NULL REFERENCES servers(id),
+    name VARCHAR(32) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(32) NOT NULL,
+    hashed_password VARCHAR(64) NOT NULL,
+    email VARCHAR(64) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS server_members (
+    server_id INTEGER NOT NULL REFERENCES servers(id),
+    user_id INTEGER NOT NULL REFERENCES users(id),
+    role role NOT NULL DEFAULT 'member',
+    joined_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS messages (
+    id SERIAL PRIMARY KEY,
+    server_id INTEGER NOT NULL REFERENCES servers(id),
+    channel_id INTEGER NOT NULL REFERENCES channels(id),
+    author_id INTEGER NOT NULL REFERENCES users(id),
+    content VARCHAR(512) NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMIT;
