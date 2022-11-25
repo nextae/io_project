@@ -195,7 +195,6 @@ body
 .chatlist .block .details .listHead h4{
     font-size: 1.1em;
     font-weight: 600;
-    /* color:#111; */
     color: rgba(255, 255, 255, 0.777);
     padding-left: 0.2em;
     margin-right: 0.5em;
@@ -270,8 +269,6 @@ body
     color: rgb(164, 159, 159);
 }
 
-/* chat box */
-
 .chatBox{
     position: relative;
     width: 100%;
@@ -290,17 +287,19 @@ body
 
 .message p{
     position: relative;
-    right: 0;
-    text-align: right;
+    /* right: 0; */
+    text-align: left;
     max-width: 65%;
     padding: 12px;
+    margin-top: 2.5px;
+    margin-bottom: 2.5px;
     background: #dcf8c6;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 0.9em;
     overflow-wrap: break-word;
 }
 
-.message p::before{
+/* .message p::before{
     content: '';
     position: absolute;
     top: 0;
@@ -308,17 +307,44 @@ body
     width: 20px;
     height: 20px;
     background: linear-gradient(135deg, #dcf8c6 0%, #dcf8c6 50%, transparent 50%,transparent);
-}
+} */
 
 .message p span{
     display: block;
-    margin-top: 5px;
+    margin-top: 2.5px;
     font-size: 0.85em;
     opacity: 0.5;
 }
 
+.message p nickname{
+    display: block;
+    margin-bottom: 2.5px;
+    font-size: 0.85em;
+    opacity: 0.5;
+    max-width: fit-content;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    overflow-wrap: break-word;
+    text-overflow: ellipsis;
+    cursor: pointer;
+}
+
 .my_message{
     justify-content: flex-end;
+}
+
+.my_message .userimg{
+    position: relative;
+    width: 40px;
+    height: 40px;
+    margin-right: -45px;
+    margin-left: 5px;
+    align-self: center;
+    overflow: hidden;
+    border-radius: 50%;
+    cursor: pointer;
 }
 
 .frnd_message{
@@ -330,7 +356,19 @@ body
     text-align: left;
 }
 
-.message.frnd_message p::before{
+.frnd_message .frndimg{
+    position: relative;
+    width: 40px;
+    height: 40px;
+    margin-right: 5px;
+    margin-left: -45px;
+    align-self: center;
+    overflow: hidden;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+/* .message.frnd_message p::before{
     content: '';
     position: absolute;
     top: 0;
@@ -338,7 +376,7 @@ body
     width: 20px;
     height: 20px;
     background: linear-gradient(225deg, #fff 0%, #fff 50%, transparent 50%,transparent);
-}
+} */
 
 .chatbox_input{
     position: relative;
