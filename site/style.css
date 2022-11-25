@@ -13,15 +13,16 @@ body
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 97vh;
-    background: linear-gradient(#009688 0%, #009688 40px, #d9dbd5 40px, #d9dbd5 100%);
+    /* min-height: 97vh; */
+    overflow: hidden;
+    /* background: linear-gradient(#009688 0%, #009688 40px, #d9dbd5 40px, #d9dbd5 100%); */
 }
 
 .container{
     position: relative;
     width: 1395px;
-    max-width: 95%;
-    height: calc(96vh - 40px);
+    height: 100vh;
+    /* height: 99%; */
     background: #fff;
     box-shadow:  0 2px 2px 0 rgba(0, 0, 0, 0.06), 0 2px 5px 0 rgba(0, 0, 0, 0.06);
     display: flex;
@@ -146,6 +147,7 @@ body
     height: calc(100% - 110px);
     /* 110px = 50px search_chat + 60px header  */
     overflow-y: auto;
+    overflow-x: hidden;
     /* background: rgb(176, 176, 176);
     opacity: 0.56; */
 }
@@ -154,17 +156,17 @@ body
     position: relative;
     width: 100%;
     display: flex;
-    /* justify-content: center; */
+    justify-content: center;
     align-items: center;
     padding: 0.5em 0.5em;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.56);
+    /* border-bottom: 1px solid rgba(0, 0, 0, 0.56); */
+    margin-bottom: 2.5px;
     background: rgba(0, 0, 0, 0.15);
     cursor: pointer;
 }
 
 .chatlist .block.active{
     background: #454545;
-
 }
 
 .chatlist .block:hover{
@@ -174,6 +176,8 @@ body
 .chatlist .block .imgbx{
     position: relative;
     min-width: 45px;
+    max-width: 90%;
+    left: 5%;
     height: 45px;
     overflow: hidden;
     border-radius: 50%;
@@ -183,7 +187,9 @@ body
 
 .chatlist .block .details{
     position: relative;
-    width: 100%;
+    width: 90%;
+    left: 5%;
+    
 }
 
 .chatlist .block .details .listHead{
@@ -198,6 +204,11 @@ body
     color: rgba(255, 255, 255, 0.777);
     padding-left: 0.2em;
     margin-right: 0.5em;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .chatlist .block .details .listHead .time{
