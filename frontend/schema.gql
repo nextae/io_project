@@ -1,0 +1,189 @@
+union AddChannelResponse = Channel | ChannelNameExists | ChannelNameTooLong
+
+union AddMemberResponse = Member | MemberExists
+
+union AddMessageResponse = Message | MessageTooLong
+
+union AddServerResponse = Server | ServerNameTooLong
+
+union ChangeChannelNameResponse = Channel | ChannelNameTooLong | ChannelNameExists | ChannelNotFound
+
+union ChangeMemberRoleResponse = Member | MemberNotFound
+
+union ChangePasswordResponse = User | InvalidPassword | PasswordTooShort
+
+union ChangeServerNameResponse = Server | ServerNameTooLong
+
+type Channel {
+  id: ID!
+  serverId: Int!
+  name: String!
+  createdAt: Int!
+  server: Server!
+  messages(limit: Int! = 100, offset: Int! = 0): [Message!]!
+}
+
+type ChannelNameExists implements Error {
+  message: String!
+}
+
+type ChannelNameTooLong implements Error {
+  message: String!
+}
+
+type ChannelNotFound implements Error {
+  message: String!
+}
+
+union DeleteChannelResponse = Channel | ChannelNotFound
+
+union DeleteMemberResponse = Member | MemberNotFound
+
+union DeleteServerResponse = Server | ServerNotFound
+
+union DeleteUserResponse = User | UserNotFound
+
+type EmailExists implements Error {
+  message: String!
+}
+
+interface Error {
+  message: String!
+}
+
+union GetChannelResponse = Channel | ChannelNotFound
+
+union GetMemberResponse = Member | MemberNotFound
+
+union GetMessageResponse = Message | MessageNotFound
+
+union GetServerResponse = Server | ServerNotFound
+
+union GetUserResponse = User | UserNotFound
+
+type InvalidLoginData implements Error {
+  message: String!
+}
+
+type InvalidPassword implements Error {
+  message: String!
+}
+
+union LoginResponse = User | InvalidLoginData
+
+type Member {
+  id: ID!
+  name: String!
+  email: String!
+  createdAt: Int!
+  servers: [Server!]!
+  serverId: Int!
+  role: Role!
+  joinedAt: Int!
+  server: Server!
+}
+
+type MemberExists implements Error {
+  message: String!
+}
+
+type MemberNotFound implements Error {
+  message: String!
+}
+
+type Message {
+  id: ID!
+  serverId: Int!
+  channelId: Int!
+  authorId: Int!
+  content: String!
+  createdAt: Int!
+  author: Member
+  channel: Channel!
+  server: Server!
+}
+
+type MessageNotFound implements Error {
+  message: String!
+}
+
+type MessageTooLong implements Error {
+  message: String!
+}
+
+type Mutation {
+  addServer(name: String!): AddServerResponse!
+  changeServerName(serverId: Int!, newName: String!): ChangeServerNameResponse!
+  deleteServer(serverId: Int!): DeleteServerResponse!
+  addChannel(serverId: Int!, name: String!): AddChannelResponse!
+  addMember(serverId: Int!, userId: Int!, role: Role! = MEMBER): AddMemberResponse!
+  changeMemberRole(serverId: Int!, userId: Int!, newRole: Role!): ChangeMemberRoleResponse!
+  deleteMember(serverId: Int!, userId: Int!): DeleteMemberResponse!
+  changeChannelName(serverId: Int!, channelId: Int!, newName: String!): ChangeChannelNameResponse!
+  deleteChannel(channelId: Int!): DeleteChannelResponse!
+  register(username: String!, password: String!, email: String!): RegisterResponse!
+  login(username: String!, password: String!): LoginResponse!
+  changePassword(userId: Int!, oldPassword: String!, newPassword: String!): ChangePasswordResponse!
+  deleteUser(userId: Int!): DeleteUserResponse!
+  addMessage(serverId: Int!, channelId: Int!, userId: Int!, content: String!): AddMessageResponse!
+}
+
+type PasswordTooShort implements Error {
+  message: String!
+}
+
+type Query {
+  server(serverId: Int!): GetServerResponse!
+  channel(channelId: Int!): GetChannelResponse!
+  firstChannel(serverId: Int!): GetChannelResponse!
+  user(userId: Int!): GetUserResponse!
+  message(messageId: Int!): GetMessageResponse!
+  messages(channelId: Int!, limit: Int! = 100, offset: Int! = 0): [Message!]!
+  member(serverId: Int!, userId: Int!): GetMemberResponse!
+}
+
+union RegisterResponse = User | UserNameExists | EmailExists | PasswordTooShort
+
+enum Role {
+  OWNER
+  MODERATOR
+  MEMBER
+}
+
+type Server {
+  id: ID!
+  name: String!
+  createdAt: Int!
+  channels: [Channel!]!
+  members: [Member!]!
+}
+
+type ServerNameTooLong implements Error {
+  message: String!
+}
+
+type ServerNotFound implements Error {
+  message: String!
+}
+
+type Subscription {
+  newMessage(channelId: Int!): Message!
+  updatedServerName(serverId: Int!): Server!
+  updatedChannelName(serverId: Int!): Channel!
+}
+
+type User {
+  id: ID!
+  name: String!
+  email: String!
+  createdAt: Int!
+  servers: [Server!]!
+}
+
+type UserNameExists implements Error {
+  message: String!
+}
+
+type UserNotFound implements Error {
+  message: String!
+}

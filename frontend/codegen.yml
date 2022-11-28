@@ -1,0 +1,13 @@
+schema: ./schema.gql
+overwrite: true
+documents: ["src/**/*.{tsx,ts}", "src/**/*.gql"]
+ignoreNoDocuments: true
+generates:
+  ./src/gql/:
+    preset: client
+    plugins: []
+  introspection.json:
+    plugins: 
+      - urql-introspection
+    config:
+      descriptions: false
