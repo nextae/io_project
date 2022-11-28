@@ -30,3 +30,18 @@ POSTGRES_DATABASE_NAME=app
 The tables schema you need to run can be found in `backend/schema.sql`
 
 The GraphQL API is then available on http://localhost:8000/graphql
+
+## Running the frontend
+```
+cd frontend
+npm install
+npm run dev
+```
+
+### Configuration
+The frontend is configured similarly to the backend app, with a `.env` file in the `frontend` directory:
+
+```
+VITE_API_URL=http://localhost:8000/graphql
+VITE_API_WS_URL=ws://localhost:8000/graphql
+```
