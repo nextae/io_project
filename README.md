@@ -19,13 +19,16 @@ uvicorn app:app
 ```
 
 ### Config file
-You also need to set up a PostgreSQL database server and place the details in a `.env` file in the `backend` directory for example:
+You also need to set up a PostgreSQL database server and place the details and a JWT secret key in a `.env` file in the `backend` directory.
+
+Example `.env` file:
 ```
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_URL=localhost
 POSTGRES_PORT=5432
 POSTGRES_DATABASE_NAME=app
+JWT_SECRET_KEY=2de6949790543a015a9e0a32288adb37fdac0181dee95b107f617f4a5d48b9b1
 ```
 The tables schema you need to run can be found in `backend/schema.sql`
 
