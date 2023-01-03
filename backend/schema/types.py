@@ -8,7 +8,7 @@ from strawberry.types import Info
 from database import models
 from database.connection import get_session
 from utils.broadcast import broadcast
-from .utils import get_selected_fields, add_selected_fields
+from .utils import get_selected_fields, apply_selected_fields
 
 __all__ = (
     'Server',
@@ -16,7 +16,9 @@ __all__ = (
     'Message',
     'User',
     'Member',
-    'Role'
+    'Role',
+    'Invitation',
+    'AuthPayload'
 )
 
 
@@ -41,7 +43,7 @@ class Server:
         selected_fields = get_selected_fields('Server', info.selected_fields, False)
         async with get_session() as session:
             sql = select(models.Channel).where(models.Channel.server_id == int(self.id))
-            sql = add_selected_fields(sql, models.Channel, selected_fields)
+            sql = apply_selected_fields(sql, models.Channel, selected_fields)
             db_channels = (await session.execute(sql)).scalars().all()
 
             return [Channel.from_model(db_channel) for db_channel in db_channels]
@@ -56,10 +58,10 @@ class Server:
         selected_fields = get_selected_fields('Member', info.selected_fields, False)
         async with get_session() as session:
             sql = select(models.Member).where(models.Member.server_id == int(self.id))
-            sql = add_selected_fields(sql, models.Member, selected_fields)
+            sql = apply_selected_fields(sql, models.Member, selected_fields)
             db_members = (await session.execute(sql)).scalars().all()
 
-            return [Member.from_model(db_user) for db_user in db_members]
+            return [Member.from_model(db_member) for db_member in db_members]
 
     cached_members: Private[list['Member'] | None]
 
@@ -75,6 +77,16 @@ class Server:
             cached_channels=model.channels if 'channels' in selected_fields else None,
             cached_members=model.members if 'members' in selected_fields else None
         )
+
+    async def publish_new_name(self):
+        """Publishes the new server name."""
+
+        await broadcast.publish(channel=f'server_name_{self.id}', message=orjson.dumps(self.__dict__))
+
+    async def publish_deletion(self):
+        """Publishes the deletion of the server."""
+
+        await broadcast.publish(channel=f'server_delete_{self.id}', message=orjson.dumps(self.__dict__))
 
 
 @type
@@ -92,7 +104,7 @@ class Channel:
         selected_fields = get_selected_fields('Server', info.selected_fields)
         async with get_session() as session:
             sql = select(models.Server).where(models.Server.id == self.server_id)
-            sql = add_selected_fields(sql, models.Server, selected_fields)
+            sql = apply_selected_fields(sql, models.Server, selected_fields)
             db_server = (await session.execute(sql)).scalars().first()
 
             return Server.from_model(db_server, selected_fields)
@@ -110,7 +122,7 @@ class Channel:
                 .limit(limit)
                 .offset(offset)
             )
-            sql = add_selected_fields(sql, models.Message, selected_fields)
+            sql = apply_selected_fields(sql, models.Message, selected_fields)
             db_messages = (await session.execute(sql)).scalars().all()
 
             return [Message.from_model(db_message) for db_message in db_messages]
@@ -130,6 +142,16 @@ class Channel:
 
         await broadcast.publish(channel=f'channel_name_{self.server_id}', message=orjson.dumps(self.__dict__))
 
+    async def publish_deletion(self):
+        """Publishes the deletion of the channel."""
+
+        await broadcast.publish(channel=f'channel_delete_{self.server_id}', message=orjson.dumps(self.__dict__))
+
+    async def publish_creation(self):
+        """Publishes the creation of the channel."""
+
+        await broadcast.publish(channel=f'channel_{self.server_id}', message=orjson.dumps(self.__dict__))
+
 
 @type
 class User:
@@ -146,9 +168,13 @@ class User:
         selected_fields = get_selected_fields('Server', info.selected_fields, False)
         async with get_session() as session:
             sql = select(models.Server).where(
-                models.Server.id.in_(select(models.Member.server_id).where(models.Member.user_id == int(self.id)))
+                models.Server.id.in_(
+                    select(models.Member.server_id).where(
+                        models.Member.user_id == int(self.id)
+                    )
+                )
             )
-            sql = add_selected_fields(sql, models.Server, selected_fields)
+            sql = apply_selected_fields(sql, models.Server, selected_fields)
             db_servers = (await session.execute(sql)).unique().scalars().all()
 
             return [Server.from_model(db_server) for db_server in db_servers]
@@ -183,7 +209,7 @@ class Member(User):
         selected_fields = get_selected_fields('Server', info.selected_fields)
         async with get_session() as session:
             sql = select(models.Server).where(models.Server.id == self.server_id)
-            sql = add_selected_fields(sql, models.Server, selected_fields)
+            sql = apply_selected_fields(sql, models.Server, selected_fields)
             db_server = (await session.execute(sql)).scalars().first()
 
             return Server.from_model(db_server, selected_fields)
@@ -207,6 +233,16 @@ class Member(User):
             cached_servers=model.servers if 'servers' in selected_fields else None
         )
 
+    async def publish_creation(self):
+        """Publishes the creation of the member."""
+
+        await broadcast.publish(channel=f'member_{self.server_id}', message=orjson.dumps(self.__dict__))
+
+    async def publish_deletion(self):
+        """Publishes the deletion of the member."""
+
+        await broadcast.publish(channel=f'member_delete_{self.server_id}', message=orjson.dumps(self.__dict__))
+
 
 @type
 class Message:
@@ -228,10 +264,10 @@ class Message:
                 select(models.Member)
                 .where((models.Member.id == self.author_id) & (models.Member.server_id == self.server_id))
             )
-            sql = add_selected_fields(sql, models.Message, selected_fields)
+            sql = apply_selected_fields(sql, models.Member, selected_fields)
             db_member = (await session.execute(sql)).scalars().first()
 
-            return Member.from_model(db_member)
+            return Member.from_model(db_member, selected_fields)
 
     cached_author: Private[models.Member | None]
 
@@ -243,7 +279,7 @@ class Message:
         selected_fields = get_selected_fields('Channel', info.selected_fields)
         async with get_session() as session:
             sql = select(models.Channel).where(models.Channel.id == self.channel_id)
-            sql = add_selected_fields(sql, models.Channel, selected_fields)
+            sql = apply_selected_fields(sql, models.Channel, selected_fields)
             db_channel = (await session.execute(sql)).scalars().first()
 
             return Channel.from_model(db_channel)
@@ -258,7 +294,7 @@ class Message:
         selected_fields = get_selected_fields('Server', info.selected_fields)
         async with get_session() as session:
             sql = select(models.Server).where(models.Server.id == self.server_id)
-            sql = add_selected_fields(sql, models.Server, selected_fields)
+            sql = apply_selected_fields(sql, models.Server, selected_fields)
             db_server = (await session.execute(sql)).scalars().first()
 
             return Server.from_model(db_server, selected_fields)
@@ -283,3 +319,67 @@ class Message:
         """Publishes the message."""
 
         await broadcast.publish(channel=f'message_channel_{self.channel_id}', message=orjson.dumps(self.__dict__))
+
+
+@type
+class Invitation:
+    server_id: int
+    user_id: int
+    content: str | None
+    created_at: int
+
+    @field
+    async def server(self, info: Info) -> Server:
+        if self.cached_server is not None:
+            return Server.from_model(self.cached_server)
+
+        selected_fields = get_selected_fields('Server', info.selected_fields)
+        async with get_session() as session:
+            sql = select(models.Server).where(models.Server.id == self.server_id)
+            sql = apply_selected_fields(sql, models.Server, selected_fields)
+            db_server = (await session.execute(sql)).scalars().first()
+
+            return Server.from_model(db_server, selected_fields)
+
+    cached_server: Private[models.Server | None]
+
+    @field
+    async def user(self, info: Info) -> User | None:
+        if self.cached_user is not None:
+            return User.from_model(self.cached_user)
+
+        selected_fields = get_selected_fields('User', info.selected_fields)
+        async with get_session() as session:
+            sql = select(models.User).where(models.User.id == self.user_id)
+            sql = apply_selected_fields(sql, models.User, selected_fields)
+            db_user = (await session.execute(sql)).scalars().first()
+
+            return User.from_model(db_user)
+
+    cached_user: Private[models.User | None]
+
+    @classmethod
+    def from_model(cls, model: models.Invitation) -> 'Invitation':
+        return cls(
+            server_id=model.server_id,
+            user_id=model.user_id,
+            content=model.content,
+            created_at=int(model.created_at.timestamp()),
+            cached_server=model.server,
+            cached_user=model.user
+        )
+
+    async def publish_creation(self):
+        """Publishes the creation of the invitation."""
+
+        await broadcast.publish(channel=f'invitation_{self.user_id}', message=orjson.dumps(self.__dict__))
+
+
+@type
+class AuthPayload:
+    token: str
+    user: User
+
+    def __init__(self, token: str, user_model: models.User):
+        self.token = token
+        self.user = User.from_model(user_model)

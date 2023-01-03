@@ -7,3 +7,4 @@ asyncpg
 orjson~=3.8.1
 python-dotenv
 passlib[bcrypt]
+python-jose[cryptography]

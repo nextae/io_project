@@ -1,22 +1,32 @@
 from sqlalchemy import select, delete
+from sqlalchemy.exc import IntegrityError
 from strawberry import type, mutation
 from strawberry.types import Info
 
 from database import models
 from database.connection import get_session
+from database.utils import get_member, get_channel, get_invitation, get_server
 from utils.passwords import get_password_hash, verify_password
+from .auth import encode_token, IsAuthenticated
 from .errors import *
 from .responses import *
-from .types import Server, Channel, Message, User, Member, Role
-from .utils import get_selected_fields, add_selected_fields
+from .types import Server, Channel, Message, User, Member, Role, Invitation, AuthPayload
+from .utils import get_selected_fields, apply_selected_fields
 
 __all__ = ('Mutation',)
 
 
 @type
 class Mutation:
-    @mutation
-    async def add_server(self, name: str) -> AddServerResponse:
+    @mutation(permission_classes=[IsAuthenticated])
+    async def add_server(self, info: Info, name: str) -> AddServerResponse:
+        """Adds a new Server and makes the current User an owner. User has to be authenticated."""
+
+        user_id = info.context['user_id']
+
+        if len(name) < 4:
+            return ServerNameTooShort()
+
         if len(name) > 32:
             return ServerNameTooLong()
 
@@ -25,23 +35,90 @@ class Mutation:
             session.add(db_server)
             await session.commit()
 
+        async with get_session() as session:
+            db_server_member = models.ServerMember(server_id=db_server.id, user_id=user_id, role=models.Role.OWNER)
+            session.add(db_server_member)
+            await session.commit()
+
         return Server.from_model(db_server)
 
-    @mutation
-    async def change_server_name(self, server_id: int, new_name: str) -> ChangeServerNameResponse:
-        raise NotImplementedError('Not implemented')
+    @mutation(permission_classes=[IsAuthenticated])
+    async def change_server_name(self, info: Info, server_id: int, new_name: str) -> ChangeServerNameResponse:
+        """
+        Changes a Server's name.
+        User has to be authenticated and be a Member of the Server with the MODERATOR or OWNER role.
+        """
 
-    @mutation
-    async def delete_server(self, server_id: int) -> DeleteServerResponse:
-        raise NotImplementedError('Not implemented')
-
-    @mutation
-    async def add_channel(self, server_id: int, name: str) -> AddChannelResponse:
-        if len(name) > 32:
-            return ChannelNameTooLong()
+        user_id = info.context['user_id']
 
         async with get_session() as session:
-            sql = select(models.Channel).where((models.Channel.server_id == server_id) & (models.Channel.name == name))
+            db_member = await get_member(session, server_id, user_id)
+            if db_member is None or db_member.role == models.Role.MEMBER:
+                return NoPermissions()
+
+            if len(new_name) < 4:
+                return ServerNameTooShort()
+
+            if len(new_name) > 32:
+                return ServerNameTooLong()
+
+            db_server = await get_server(session, server_id, info)
+            if db_server is None:
+                return ServerNotFound()
+
+            db_server.name = new_name
+            await session.commit()
+
+        server = Server.from_model(db_server)
+        await server.publish_new_name()
+        return server
+
+    @mutation(permission_classes=[IsAuthenticated])
+    async def delete_server(self, info: Info, server_id: int) -> DeleteServerResponse:
+        """Deletes a Server. User has to be authenticated and be a Member of the Server with the OWNER role."""
+
+        user_id = info.context['user_id']
+
+        async with get_session() as session:
+            db_member = await get_member(session, server_id, user_id)
+            if db_member is None or db_member.role != models.Role.OWNER:
+                return NoPermissions()
+
+            db_server = await get_server(session, server_id, info)
+            if db_server is None:
+                return ServerNotFound()
+
+            await session.delete(db_server)
+            await session.commit()
+
+        server = Server.from_model(db_server)
+        await server.publish_deletion()
+        return server
+
+    @mutation(permission_classes=[IsAuthenticated])
+    async def add_channel(self, info: Info, server_id: int, name: str) -> AddChannelResponse:
+        """
+        Adds a new Channel in the Server.
+        User has to be authenticated and be a Member of the Server with the MODERATOR or OWNER role.
+        """
+
+        user_id = info.context['user_id']
+
+        async with get_session() as session:
+            db_member = await get_member(session, server_id, user_id)
+            if db_member is None or db_member.role == models.Role.MEMBER:
+                return NoPermissions()
+
+            if len(name) < 4:
+                return ChannelNameTooShort()
+
+            if len(name) > 32:
+                return ChannelNameTooLong()
+
+            sql = select(models.Channel).where(
+                (models.Channel.server_id == server_id)
+                & (models.Channel.name == name)
+            )
             existing_channel = (await session.execute(sql)).scalars().first()
             if existing_channel is not None:
                 return ChannelNameExists()
@@ -50,30 +127,11 @@ class Mutation:
             session.add(db_channel)
             await session.commit()
 
-        return Channel.from_model(db_channel)
+        channel = Channel.from_model(db_channel)
+        await channel.publish_creation()
+        return channel
 
-    @mutation
-    async def add_member(self, info: Info, server_id: int, user_id: int, role: Role = Role.MEMBER) -> AddMemberResponse:
-        async with get_session() as session:
-            sql = select(models.Member).where((models.Member.id == user_id) & (models.Member.server_id == server_id))
-            existing_member = (await session.execute(sql)).scalars().first()
-            if existing_member is not None:
-                return MemberExists()
-
-            db_server_member = models.ServerMember(server_id=server_id, user_id=user_id, role=role.value)
-            session.add(db_server_member)
-
-            selected_fields = get_selected_fields('Member', info.selected_fields)
-
-            sql = select(models.Member).where((models.Member.id == user_id) & (models.Member.server_id == server_id))
-            sql = add_selected_fields(sql, models.Member, selected_fields)
-
-            db_member = (await session.execute(sql)).scalars().first()
-            await session.commit()
-
-        return Member.from_model(db_member, selected_fields)
-
-    @mutation
+    @mutation(permission_classes=[IsAuthenticated])
     async def change_member_role(
             self,
             info: Info,
@@ -81,43 +139,137 @@ class Mutation:
             user_id: int,
             new_role: Role
     ) -> ChangeMemberRoleResponse:
-        raise NotImplementedError('Not implemented')
+        """
+        Changes a Member's role.
+        User has to be authenticated and be a Member of the server with the OWNER role.
+        If the OWNER role is chosen then the previous owner is demoted to a moderator.
+        The owner cannot change their own role.
+        """
 
-    @mutation
-    async def delete_member(self, info: Info, server_id: int, user_id: int) -> DeleteMemberResponse:
-        selected_fields = get_selected_fields('Member', info.selected_fields)
+        authenticated_user_id = info.context['user_id']
+
         async with get_session() as session:
-            sql = select(models.Member).where((models.Member.id == user_id) & (models.Member.server_id == server_id))
-            sql = add_selected_fields(sql, models.Member, selected_fields)
-            db_member = (await session.execute(sql)).scalars().first()
-            if db_member is None:
+            db_member = await get_member(session, server_id, authenticated_user_id)
+            if db_member is None or db_member.role != models.Role.OWNER:
+                return NoPermissions()
+
+            db_member_target = await get_member(session, server_id, user_id)
+            if db_member_target is None:
                 return MemberNotFound()
 
-            sql = (
-                delete(models.ServerMember)
-                .where((models.ServerMember.server_id == server_id) & (models.ServerMember.user_id == user_id))
+            if db_member.id == db_member_target.id:
+                return NoPermissions()
+
+            db_member_target.role = new_role.value
+            if new_role.value == models.Role.OWNER:
+                db_member.role = models.Role.MODERATOR
+
+            await session.commit()
+
+        return Member.from_model(db_member_target)
+
+    @mutation(permission_classes=[IsAuthenticated])
+    async def kick_member(self, info: Info, server_id: int, user_id: int) -> KickMemberResponse:
+        """
+        Kicks a Member from the Server.
+        User has to be authenticated and be a Member of the server with the MODERATOR or OWNER role.
+        Users cannot kick themselves.
+        Moderators can only kick Members with the MEMBER role.
+        """
+
+        authenticated_user_id = info.context['user_id']
+
+        async with get_session() as session:
+            db_member = await get_member(session, server_id, authenticated_user_id)
+            if db_member is None or db_member.role == models.Role.MEMBER:
+                return NoPermissions()
+
+            db_member_target = await get_member(session, server_id, user_id)
+            if db_member_target is None:
+                return MemberNotFound()
+
+            if db_member.id == db_member_target.id:
+                return NoPermissions()
+
+            if db_member.role == models.Role.MODERATOR and db_member_target.role != models.Role.MEMBER:
+                return NoPermissions()
+
+            sql = delete(models.ServerMember).where(
+                (models.ServerMember.server_id == server_id)
+                & (models.ServerMember.user_id == user_id)
             )
             await session.execute(sql)
             await session.commit()
 
-        return Member.from_model(db_member)
+        member = Member.from_model(db_member_target)
+        await member.publish_deletion()
+        return member
 
-    @mutation
-    async def change_channel_name(self, server_id: int, channel_id: int, new_name: str) -> ChangeChannelNameResponse:
-        if len(new_name) > 32:
-            return ChannelNameTooLong()
+    @mutation(permission_classes=[IsAuthenticated])
+    async def leave_server(self, info: Info, server_id: int) -> KickMemberResponse:
+        """
+        Leaves a Server.
+        User has to be authenticated and be a Member of the server.
+        The owner cannot leave the Server.
+        """
+
+        authenticated_user_id = info.context['user_id']
 
         async with get_session() as session:
-            sql = (
-                select(models.Channel)
-                .where((models.Channel.server_id == server_id) & (models.Channel.name == new_name))
+            db_member = await get_member(session, server_id, authenticated_user_id, info)
+            if db_member is None:
+                return NoPermissions()
+
+            if db_member.role == models.Role.OWNER:
+                return NoPermissions()
+
+            sql = delete(models.ServerMember).where(
+                (models.ServerMember.server_id == server_id)
+                & (models.ServerMember.user_id == authenticated_user_id)
+            )
+
+            await session.execute(sql)
+            await session.commit()
+
+        member = Member.from_model(db_member)
+        await member.publish_deletion()
+        return member
+
+    @mutation(permission_classes=[IsAuthenticated])
+    async def change_channel_name(
+            self,
+            info: Info,
+            server_id: int,
+            channel_id: int,
+            new_name: str
+    ) -> ChangeChannelNameResponse:
+        """
+        Changes a Channel's name.
+        User has to be authenticated and be a Member of the Server with the MODERATOR or OWNER role.
+        """
+
+        user_id = info.context['user_id']
+
+        async with get_session() as session:
+            db_member = await get_member(session, server_id, user_id)
+            if db_member is None or db_member.role == models.Role.MEMBER:
+                return NoPermissions()
+
+            if len(new_name) < 4:
+                return ChannelNameTooShort()
+
+            if len(new_name) > 32:
+                return ChannelNameTooLong()
+
+            sql = select(models.Channel).where(
+                (models.Channel.server_id == server_id)
+                & (models.Channel.name == new_name)
             )
             existing_channel = (await session.execute(sql)).scalars().first()
             if existing_channel is not None:
                 return ChannelNameExists()
 
-            sql = select(models.Channel).where(models.Channel.id == channel_id)
-            db_channel: models.Channel = (await session.execute(sql)).scalars().first()
+            db_channel: models.Channel = await get_channel(session, server_id, channel_id, info)
             if db_channel is None:
                 return ChannelNotFound()
 
@@ -128,12 +280,35 @@ class Mutation:
         await channel.publish_new_name()
         return channel
 
-    @mutation
-    async def delete_channel(self, channel_id: int) -> DeleteChannelResponse:
-        raise NotImplementedError('Not implemented')
+    @mutation(permission_classes=[IsAuthenticated])
+    async def delete_channel(self, info: Info, server_id: int, channel_id: int) -> DeleteChannelResponse:
+        """
+        Deletes a Channel.
+        User has to be authenticated and be a Member of the Server with the MODERATOR or OWNER role.
+        """
+
+        user_id = info.context['user_id']
+
+        async with get_session() as session:
+            db_member = await get_member(session, server_id, user_id)
+            if db_member is None or db_member.role == models.Role.MEMBER:
+                return NoPermissions()
+
+            db_channel = await get_channel(session, server_id, channel_id, info)
+            if db_channel is None:
+                return ChannelNotFound()
+
+            await session.delete(db_channel)
+            await session.commit()
+
+        channel = Channel.from_model(db_channel)
+        await channel.publish_deletion()
+        return channel
 
     @mutation
     async def register(self, username: str, password: str, email: str) -> RegisterResponse:
+        """Registers a new User."""
+
         if len(password) < 8:
             return PasswordTooShort()
 
@@ -151,34 +326,89 @@ class Mutation:
             session.add(db_user)
             await session.commit()
 
-        return User.from_model(db_user)
+        return AuthPayload(encode_token(db_user.id), db_user)
 
     @mutation
     async def login(self, info: Info, username: str, password: str) -> LoginResponse:
+        """Logs in an existing User."""
+
         selected_fields = get_selected_fields('User', info.selected_fields)
         async with get_session() as session:
             sql = select(models.User).where(models.User.name == username)
-            sql = add_selected_fields(sql, models.User, selected_fields)
+            sql = apply_selected_fields(sql, models.User, selected_fields)
             db_user: models.User = (await session.execute(sql)).scalars().first()
             if db_user is None or not verify_password(password, db_user.hashed_password):
                 return InvalidLoginData()
 
-        return User.from_model(db_user)
+        return AuthPayload(encode_token(db_user.id), db_user)
 
-    @mutation
-    async def change_password(self, user_id: int, old_password: str, new_password: str) -> ChangePasswordResponse:
-        raise NotImplementedError('Not implemented')
+    @mutation(permission_classes=[IsAuthenticated])
+    async def change_password(self, info: Info, old_password: str, new_password: str) -> ChangePasswordResponse:
+        """
+        Changes the current User's password.
+        User has to be authenticated.
+        """
 
-    @mutation
-    async def delete_user(self, user_id: int) -> DeleteUserResponse:
-        raise NotImplementedError('Not implemented')
+        user_id = info.context['user_id']
 
-    @mutation
-    async def add_message(self, server_id: int, channel_id: int, user_id: int, content: str) -> AddMessageResponse:
-        if len(content) > 512:
-            return MessageTooLong()
+        if len(new_password) < 8:
+            return PasswordTooShort()
+
+        selected_fields = get_selected_fields('User', info.selected_fields)
+        async with get_session() as session:
+            sql = select(models.User).where(models.User.id == user_id)
+            sql = apply_selected_fields(sql, models.User, selected_fields)
+            db_user = (await session.execute(sql)).scalars().first()
+            if db_user is None:
+                return UserNotFound()
+
+            if not verify_password(old_password, db_user.hashed_password):
+                return InvalidPassword()
+
+            db_user.hashed_password = get_password_hash(new_password)
+            await session.commit()
+
+        return User.from_model(db_user, selected_fields)
+
+    @mutation(permission_classes=[IsAuthenticated])
+    async def delete_user(self, info: Info) -> DeleteUserResponse:
+        """
+        Deletes the current User.
+        User has to be authenticated.
+        """
+
+        user_id = info.context['user_id']
+
+        selected_fields = get_selected_fields('User', info.selected_fields)
+        async with get_session() as session:
+            sql = select(models.User).where(models.User.id == user_id)
+            sql = apply_selected_fields(sql, models.User, selected_fields)
+            db_user = (await session.execute(sql)).scalars().first()
+            if db_user is None:
+                return UserNotFound()
+
+            await session.delete(db_user)
+            await session.commit()
+
+        return User.from_model(db_user, selected_fields)
+
+    @mutation(permission_classes=[IsAuthenticated])
+    async def add_message(self, info: Info, server_id: int, channel_id: int, content: str) -> AddMessageResponse:
+        """
+        Adds (sends) a Message.
+        User has to be authenticated and be a Member of the Server.
+        """
+
+        user_id = info.context['user_id']
 
         async with get_session() as session:
+            db_member = await get_member(session, server_id, user_id)
+            if db_member is None:
+                return NoPermissions()
+
+            if len(content) > 512:
+                return MessageTooLong()
+
             db_message = models.Message(server_id=server_id, channel_id=channel_id, author_id=user_id, content=content)
             session.add(db_message)
             await session.commit()
@@ -186,3 +416,74 @@ class Mutation:
         message = Message.from_model(db_message)
         await message.publish()
         return message
+
+    @mutation(permission_classes=[IsAuthenticated])
+    async def invite_user(self, info: Info, server_id: int, user_id: int, content: str) -> InviteUserResponse:
+        """
+        Invites a User to the Server.
+        User has to be authenticated and be a Member of the Server with the MODERATOR or OWNER role.
+        """
+
+        authenticated_user_id = info.context['user_id']
+
+        async with get_session() as session:
+            db_member = await get_member(session, server_id, authenticated_user_id)
+            if db_member is None or db_member.role == models.Role.MEMBER:
+                return NoPermissions()
+
+            if len(content) > 512:
+                return ContentTooLong()
+
+            existing_member = await get_member(session, server_id, user_id)
+            if existing_member is not None:
+                return MemberExists()
+
+            db_invitation = await get_invitation(session, server_id, user_id)
+            if db_invitation is not None:
+                return InvitationExists()
+
+            db_invitation = models.Invitation(server_id=server_id, user_id=user_id, content=content)
+            session.add(db_invitation)
+
+            try:
+                await session.commit()
+            except IntegrityError:
+                return UserNotFound()
+
+        invitation = Invitation.from_model(db_invitation)
+        await invitation.publish_creation()
+        return invitation
+
+    @mutation(permission_classes=[IsAuthenticated])
+    async def accept_invitation(self, info: Info, server_id: int) -> AcceptInvitationResponse:
+        """Accepts a Server Invitation. User has to be authenticated."""
+
+        user_id = info.context['user_id']
+
+        async with get_session() as session:
+            db_invitation = await get_invitation(session, server_id, user_id, info)
+            if db_invitation is None:
+                return InvitationNotFound()
+
+            await session.delete(db_invitation)
+
+            # Adds the User to the Server
+            db_server_member = models.ServerMember(server_id=server_id, user_id=user_id)
+            session.add(db_server_member)
+            await session.commit()
+
+        return Invitation.from_model(db_invitation)
+
+    @mutation(permission_classes=[IsAuthenticated])
+    async def decline_invitation(self, info: Info, server_id: int, user_id: int) -> DeclineInvitationResponse:
+        """Declines a Server Invitation. User has to be authenticated."""
+
+        async with get_session() as session:
+            db_invitation = await get_invitation(session, server_id, user_id, info)
+            if db_invitation is None:
+                return InvitationNotFound()
+
+            await session.delete(db_invitation)
+            await session.commit()
+
+        return Invitation.from_model(db_invitation)

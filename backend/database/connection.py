@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 
 load_dotenv()
 
-__all__ = ('get_session',)
+__all__ = ('get_session', 'AsyncSession')
 
 postgres_user = getenv('POSTGRES_USER')
 postgres_password = getenv('POSTGRES_PASSWORD')

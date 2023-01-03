@@ -1,7 +1,7 @@
 from strawberry import union
 
 from .errors import *
-from .types import Server, Channel, Message, User, Member
+from .types import Server, Channel, Message, User, Member, Invitation, AuthPayload
 
 __all__ = (
     'AddServerResponse',
@@ -19,48 +19,70 @@ __all__ = (
     'DeleteUserResponse',
     'DeleteServerResponse',
     'DeleteChannelResponse',
-    'DeleteMemberResponse',
+    'KickMemberResponse',
     'AddMemberResponse',
     'ChangeMemberRoleResponse',
-    'GetMemberResponse'
+    'GetMemberResponse',
+    'InviteUserResponse',
+    'AcceptInvitationResponse',
+    'DeclineInvitationResponse'
 )
 
-AddServerResponse = union('AddServerResponse', (Server, ServerNameTooLong))
+AddServerResponse = union('AddServerResponse', (Server, ServerNameTooLong, ServerNameTooShort))
 
-AddChannelResponse = union('AddChannelResponse', (Channel, ChannelNameExists, ChannelNameTooLong))
+AddChannelResponse = union(
+    'AddChannelResponse',
+    (Channel, ChannelNameExists, ChannelNameTooShort, ChannelNameTooLong, NoPermissions)
+)
 
-AddMessageResponse = union('AddMessageResponse', (Message, MessageTooLong))
+AddMessageResponse = union('AddMessageResponse', (Message, MessageTooLong, MessageEmpty, NoPermissions))
 
-GetServerResponse = union('GetServerResponse', (Server, ServerNotFound))
+GetServerResponse = union('GetServerResponse', (Server, ServerNotFound, NoPermissions))
 
-GetChannelResponse = union('GetChannelResponse', (Channel, ChannelNotFound))
+GetChannelResponse = union('GetChannelResponse', (Channel, ChannelNotFound, NoPermissions))
 
 GetUserResponse = union('GetUserResponse', (User, UserNotFound))
 
-GetMessageResponse = union('GetMessageResponse', (Message, MessageNotFound))
+GetMessageResponse = union('GetMessageResponse', (Message, MessageNotFound, NoPermissions))
 
-RegisterResponse = union('RegisterResponse', (User, UserNameExists, EmailExists, PasswordTooShort))
+RegisterResponse = union('RegisterResponse', (AuthPayload, UserNameExists, EmailExists, PasswordTooShort))
 
-LoginResponse = union('LoginResponse', (User, InvalidLoginData))
+LoginResponse = union('LoginResponse', (AuthPayload, InvalidLoginData))
 
-ChangeServerNameResponse = union('ChangeServerNameResponse', (Server, ServerNameTooLong))
-
-ChangeChannelNameResponse = union(
-    'ChangeChannelNameResponse', (Channel, ChannelNameTooLong, ChannelNameExists, ChannelNotFound)
+ChangeServerNameResponse = union(
+    'ChangeServerNameResponse',
+    (Server, ServerNotFound, ServerNameTooLong, ServerNameTooShort, NoPermissions)
 )
 
-ChangePasswordResponse = union('ChangePasswordResponse', (User, InvalidPassword, PasswordTooShort))
+ChangeChannelNameResponse = union(
+    'ChangeChannelNameResponse',
+    (Channel, ChannelNameTooLong, ChannelNameTooShort, ChannelNameExists, ChannelNotFound, NoPermissions)
+)
+
+ChangePasswordResponse = union(
+    'ChangePasswordResponse', (User, UserNotFound, InvalidPassword, PasswordTooShort)
+)
 
 DeleteUserResponse = union('DeleteUserResponse', (User, UserNotFound))
 
-DeleteServerResponse = union('DeleteServerResponse', (Server, ServerNotFound))
+DeleteServerResponse = union('DeleteServerResponse', (Server, ServerNotFound, NoPermissions))
 
-DeleteChannelResponse = union('DeleteChannelResponse', (Channel, ChannelNotFound))
+DeleteChannelResponse = union('DeleteChannelResponse', (Channel, ChannelNotFound, NoPermissions))
 
-DeleteMemberResponse = union('DeleteMemberResponse', (Member, MemberNotFound))
+KickMemberResponse = union('DeleteMemberResponse', (Member, MemberNotFound, NoPermissions))
 
-AddMemberResponse = union('AddMemberResponse', (Member, MemberExists))
+LeaveServerResponse = union('LeaveServerResponse', (Member, NoPermissions))
 
-ChangeMemberRoleResponse = union('ChangeMemberRoleResponse', (Member, MemberNotFound))
+AddMemberResponse = union('AddMemberResponse', (Member, MemberExists, NoPermissions))
 
-GetMemberResponse = union('GetMemberResponse', (Member, MemberNotFound))
+ChangeMemberRoleResponse = union('ChangeMemberRoleResponse', (Member, MemberNotFound, NoPermissions))
+
+GetMemberResponse = union('GetMemberResponse', (Member, MemberNotFound, NoPermissions))
+
+InviteUserResponse = union(
+    'InviteUserResponse', (Invitation, ContentTooLong, MemberExists, InvitationExists, UserNotFound, NoPermissions)
+)
+
+AcceptInvitationResponse = union('AcceptInvitationResponse', (Invitation, InvitationNotFound))
+
+DeclineInvitationResponse = union('DeclineInvitationResponse', (Invitation, InvitationNotFound))

@@ -13,9 +13,16 @@ __all__ = (
     'InvalidLoginData',
     'InvalidPassword',
     'ServerNameTooLong',
+    'ServerNameTooShort',
     'MessageTooLong',
+    'MessageEmpty',
     'ChannelNameTooLong',
-    'MemberExists'
+    'ChannelNameTooShort',
+    'MemberExists',
+    'NoPermissions',
+    'InvitationExists',
+    'InvitationNotFound',
+    'ContentTooLong'
 )
 
 
@@ -85,8 +92,18 @@ class ServerNameTooLong(Error):
 
 
 @type
+class ServerNameTooShort(Error):
+    message: str = 'Server name is too short'
+
+
+@type
 class MessageTooLong(Error):
     message: str = 'Message is too long'
+
+
+@type
+class MessageEmpty(Error):
+    message: str = 'Message cannot be empty'
 
 
 @type
@@ -95,5 +112,30 @@ class ChannelNameTooLong(Error):
 
 
 @type
+class ChannelNameTooShort(Error):
+    message: str = 'Channel name is too short'
+
+
+@type
 class MemberExists(Error):
     message: str = 'User is already a member of this server'
+
+
+@type
+class NoPermissions(Error):
+    message: str = 'You don\'t have permissions to do this'
+
+
+@type
+class InvitationExists(Error):
+    message: str = 'User is already invited to this server'
+
+
+@type
+class InvitationNotFound(Error):
+    message: str = 'User has not been invited to this server'
+
+
+@type
+class ContentTooLong(Error):
+    message: str = 'Invitation content is too long'

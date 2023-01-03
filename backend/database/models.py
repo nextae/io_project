@@ -11,6 +11,7 @@ __all__ = (
     'User',
     'Member',
     'ServerMember',
+    'Invitation',
     'Role',
     'Base'
 )
@@ -102,12 +103,27 @@ class Message(Base):
     id: int = Column(Integer, primary_key=True, index=True)
     server_id: int = Column(Integer, ForeignKey(Server.id), nullable=False)
     channel_id: int = Column(Integer, ForeignKey(Channel.id), nullable=False)
-    author_id: int = Column(Integer, ForeignKey(User.id), nullable=False)
+    author_id: int | None = Column(Integer, ForeignKey(User.id))
     content: str = Column(String, nullable=False)
     created_at: datetime = Column(DateTime, nullable=False, server_default=FetchedValue())
 
     server: Server | None = relationship(Server, lazy='noload')
     channel: Channel | None = relationship(Channel, lazy='noload')
     author: Member | None = relationship(Member, lazy='noload', foreign_keys=[server_id, author_id])
+
+    __mapper_args__ = {'eager_defaults': True}
+
+
+class Invitation(Base):
+    __tablename__ = 'invitations'
+    __table_args__ = (PrimaryKeyConstraint('server_id', 'user_id'),)
+
+    server_id: int = Column(Integer, ForeignKey(Server.id), nullable=False)
+    user_id: int = Column(Integer, ForeignKey(User.id), nullable=False)
+    content: str | None = Column(String)
+    created_at: datetime = Column(DateTime, nullable=False, server_default=FetchedValue())
+
+    server: Server | None = relationship(Server, lazy='noload')
+    user: User | None = relationship(Member, lazy='noload')
 
     __mapper_args__ = {'eager_defaults': True}
