@@ -182,13 +182,28 @@ class Query:
 
     @field(permission_classes=[IsAuthenticated])
     async def current_user(self, info: Info) -> GetUserResponse:
-        """Gets the currently authenticated User."""
+        """Gets the currently authenticated User. User has to be authenticated."""
 
         user_id = info.context['user_id']
 
         selected_fields = get_selected_fields('User', info.selected_fields)
         async with get_session() as session:
             sql = select(models.User).where(models.User.id == user_id)
+            sql = apply_selected_fields(sql, models.User, selected_fields)
+
+            db_user = (await session.execute(sql)).scalars().first()
+            if db_user is None:
+                return UserNotFound()
+
+        return User.from_model(db_user, selected_fields)
+
+    @field(permission_classes=[IsAuthenticated])
+    async def user(self, info: Info, username: str) -> GetUserResponse:
+        """Gets a user by the username. User has to be authenticated."""
+
+        selected_fields = get_selected_fields('User', info.selected_fields)
+        async with get_session() as session:
+            sql = select(models.User).where(models.User.name.ilike(username))
             sql = apply_selected_fields(sql, models.User, selected_fields)
 
             db_user = (await session.execute(sql)).scalars().first()

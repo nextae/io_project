@@ -48,7 +48,7 @@ class ChannelNotFound(Error):
 
 @type
 class UserNotFound(Error):
-    message: str = 'User with the given id has not been found'
+    message: str = 'User has not been found'
 
 
 @type
