@@ -32,14 +32,15 @@ body
 .container .leftSide{
     position: relative;
     flex: 20%;
-    max-width: 300px;
+    /* max-width: 300px; */
     /* background: #fff; */
     background: rgba(21, 19, 19, 0.88);
     border-right: 1px solid #000;
 }
 .container .centerBox{
     position: relative;
-    max-width: calc(100%-600px);
+    flex: 60%;
+    /* max-width: calc(100%-600px); */
     /* flex: 60%; */
     /* background: #e5ddd5; */
     background: rgb(0, 0, 0);
@@ -48,7 +49,7 @@ body
 .container .rightSide{
     position: relative;
     flex: 20%;
-    max-width: 300px;
+    /* max-width: 300px; */
     background: rgba(21, 19, 19, 0.88);
     border-left: 1px solid #000;
 }
