@@ -239,6 +239,7 @@ body{
     margin-left: 3%;
     margin-top: 25px;
     border-radius: 50%;
+    cursor: pointer;
 }
 
 .infoBlock.invite p{
