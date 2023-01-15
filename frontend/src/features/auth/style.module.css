@@ -1,0 +1,78 @@
+.loginPage {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(21, 19, 19, 0.88);
+
+  & button {
+    align-self: center;
+    margin-top: 1rem;
+  }
+}
+
+.error {
+  color: rgb(255, 169, 169);
+  margin-bottom: -2rem;
+  margin-top: 1rem;
+  font-weight: bold;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+
+  svg {
+    margin-right: 0.5rem;
+    font-size: 1.5rem;
+  }
+}
+
+.box {
+  width: 570px;
+  background: rgba(15, 15, 15, 0.55);
+  border-radius: 8px;
+  overflow: hidden;
+  outline: 4px solid rgb(65, 65, 65);
+  padding: 2rem;
+}
+
+.form {
+  background: rgb(31, 30, 30);
+  border-radius: 8px;
+  z-index: 10;
+  flex-direction: column;
+  display: flex;
+}
+
+.form h1 {
+  color: #06d755;
+  font-weight: 800;
+  font-size: 2.5em;
+  text-align: center;
+  letter-spacing: 0.1em;
+  margin-bottom: 2rem;
+}
+
+.links {
+  display: flex;
+  justify-content: space-around;
+}
+
+.links a {
+  margin: 10px 0;
+  font-size: 1em;
+  color: #06d756a9;
+  text-decoration: underline;
+}
+
+.links a:hover {
+  color: #06d755;
+}
+
+.message {
+  font-size: 1.5rem;
+
+  color: #fffa;
+  text-align: center;
+  margin-bottom: 2rem;
+
+}

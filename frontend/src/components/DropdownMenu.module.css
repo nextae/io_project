@@ -1,0 +1,39 @@
+.content {
+  min-width: 12rem;
+  background-color: #1f1e1e;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.item {
+  font-size: 1rem;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  padding: 0.8rem 0.8rem;
+  position: relative;
+  user-select: none;
+  outline: none;
+  background: #494949;
+  color: white;
+}
+
+.item + .item {
+  border-top: 1px solid #fff4;
+}
+
+.item svg {
+  margin-right: 0.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.item:hover {
+  background-color: #666666;
+}
+
+.arrow {
+  fill: #494949;
+  width: 16px;
+  height: 10px;
+}

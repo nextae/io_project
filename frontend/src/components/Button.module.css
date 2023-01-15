@@ -1,0 +1,74 @@
+.button {
+  background: #494949;
+  border: none;
+  border-radius: 8px;
+  border-radius: 4px;
+  color: rgb(0, 0, 0);
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0.4rem 0;
+  outline: none;
+  padding: 1rem;
+  padding: 1rem 2rem;
+  text-transform: uppercase;
+  position: relative;
+
+  &:hover {
+    background: #585858;
+  }
+
+  &:active {
+    background: #494949;
+  }
+
+  &:focus-visible {
+    outline: 4px solid #fff6;
+  }
+}
+
+.button.primary {
+  background: #06d755;
+  color: black;
+
+  &:hover {
+    background: #3bff86;
+  }
+
+  &:active {
+    background: #06d755;
+  }
+}
+
+.button.danger {
+  background: #ff6a62;
+  color: black;
+
+  &:hover {
+    background: #ff8680;
+  }
+
+  &:active {
+    background: #ff6a62;
+  }
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    color: inherit;
+  }
+}
+
+.busy .content  {
+  opacity: 0;
+}

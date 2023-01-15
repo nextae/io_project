@@ -1,0 +1,86 @@
+.settings {
+  flex: 80%;
+  background: #393939;
+
+  main {
+    overflow-y: auto;
+    height: calc(100% - 60px);
+  }
+}
+
+.infoBlock h3 {
+  position: relative;
+  font-size: 1.6rem;
+  color: rgba(255, 255, 255, 0.433);
+}
+
+.infoBlock p {
+  position: relative;
+  font-size: 1.2rem;
+  color: white;
+}
+
+/*Remove to view password as text*/
+.infoBlock .password {
+  text-security: disc; /*IE/Safari*/
+  -moz-text-security: disc; /* FireFox */
+  -webkit-text-security: disc; /* Chrome/Safari  */
+  user-select: none;
+}
+
+.infoBlock .changeInfo li {
+  padding-left: 5px;
+  padding-right: 5px;
+  color: #06d755;
+  cursor: pointer;
+}
+
+.infoBlock .changeInfo li:hover {
+  font-weight: 600;
+  color: #01f55e;
+}
+
+.infoBlock {
+  position: relative;
+  width: 85%;
+  max-width: 30rem;
+  margin-left: 2rem;
+  padding: 1rem;
+  border-radius: 10px;
+  background: rgba(47, 46, 46, 0.936);
+
+  & + & {
+    margin-top: 1rem;
+  }
+}
+
+.header {
+  display: flex;
+  h3 {
+    flex: auto;
+  }
+}
+
+.timestamp {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.9rem;
+  margin-top: 0.2rem;
+  display: block;
+}
+
+.invitations h2 {
+  position: relative;
+  font-size: 2.2rem;
+  margin-left: 2rem;
+  color: rgba(255, 255, 255, 0.433);
+}
+
+.infoList {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+
+  > button {
+    margin-left: 2rem;
+    margin-top: 1rem;
+  }
+}

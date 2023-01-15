@@ -1,18 +1,21 @@
 import App from "@/App";
+import { ClientProvider } from "@/lib/api/client";
 import { AuthProvider } from "@/lib/auth";
-import { ClientProvider } from "@/lib/client";
-import "@/styles/style.css";
-import React from "react";
+import "@/styles/main.css";
+import React, { Suspense } from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+
+import { TransitionRouter } from "./components/TransitionRouter";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <AuthProvider>
       <ClientProvider>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <TransitionRouter>
+          <Suspense>
+            <App />
+          </Suspense>
+        </TransitionRouter>
       </ClientProvider>
     </AuthProvider>
   </React.StrictMode>
