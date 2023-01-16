@@ -308,20 +308,6 @@ const leaveServer: UpdateResolver<
       return data;
     }
   );
-
-  cache.updateQuery(
-    {
-      query: GetMembersQuery,
-      variables: { serverId: +leaveServer.server.id },
-    },
-    (data) => {
-      if (data?.server.__typename === "Server")
-        data.server.members = data.server.members.filter(
-          (member) => member.id !== leaveServer.id
-        );
-      return data;
-    }
-  );
 };
 
 const kickMember: UpdateResolver<
