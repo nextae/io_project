@@ -310,6 +310,8 @@ class Message:
             )
             sql = apply_selected_fields(sql, models.Member, selected_fields)
             db_member = (await session.execute(sql)).scalars().first()
+            if db_member is None:
+                return None
 
             return Member.from_model(db_member, selected_fields, db_member.id == user_id)
 
