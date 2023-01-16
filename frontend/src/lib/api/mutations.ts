@@ -258,8 +258,8 @@ export const AcceptInvitationMutation = graphql(/* GraphQL */ `
 `);
 
 export const DeclineInvitationMutation = graphql(/* GraphQL */ `
-  mutation DeclineInvitationMutation($serverId: Int!, $userId: Int!) {
-    declineInvitation(serverId: $serverId, userId: $userId) {
+  mutation DeclineInvitationMutation($serverId: Int!) {
+    declineInvitation(serverId: $serverId) {
       __typename
       ... on Invitation {
         serverId

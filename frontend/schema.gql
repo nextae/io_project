@@ -166,7 +166,7 @@ type Mutation {
   addMessage(serverId: Int!, channelId: Int!, content: String!): AddMessageResponse!
   inviteUser(serverId: Int!, userId: Int!, content: String!): InviteUserResponse!
   acceptInvitation(serverId: Int!): AcceptInvitationResponse!
-  declineInvitation(serverId: Int!, userId: Int!): DeclineInvitationResponse!
+  declineInvitation(serverId: Int!): DeclineInvitationResponse!
 }
 
 type NoPermissions implements Error {

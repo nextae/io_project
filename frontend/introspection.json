@@ -1570,16 +1570,6 @@
                     "name": "Any"
                   }
                 }
-              },
-              {
-                "name": "userId",
-                "type": {
-                  "kind": "NON_NULL",
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "Any"
-                  }
-                }
               }
             ]
           },

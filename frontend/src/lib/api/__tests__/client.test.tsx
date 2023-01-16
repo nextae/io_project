@@ -1152,8 +1152,8 @@ describe("client graphcache", () => {
     await client
       .mutation(
         /* GraphQL */ `
-          mutation DeclineInvitation($serverId: Int!, $userId: Int!) {
-            declineInvitation(serverId: $serverId, userId: $userId) {
+          mutation DeclineInvitation($serverId: Int!) {
+            declineInvitation(serverId: $serverId) {
               __typename
               ... on Invitation {
                 serverId
@@ -1161,7 +1161,7 @@ describe("client graphcache", () => {
             }
           }
         `,
-        { serverId: 0, userId: 0 }
+        { serverId: 0 }
       )
       .toPromise();
 
