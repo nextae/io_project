@@ -145,6 +145,7 @@ export interface User {
   id: number;
   token: string;
   username: string;
+  password: string;
 }
 
 export class Client {
@@ -167,7 +168,7 @@ export class Client {
     return {
       id: +result.data.register.user.id,
       token: result.data.register.token,
-      username: params.username,
+      ...params,
     };
   }
 
@@ -181,7 +182,7 @@ export class Client {
     return {
       id: +result.data.login.user.id,
       token: result.data.login.token,
-      username: params.username,
+      ...params,
     };
   }
 
