@@ -26,6 +26,8 @@ async_session = sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=
 
 @asynccontextmanager
 async def get_session() -> AsyncContextManager[AsyncSession]:
+    """Gets the database session."""
+
     async with async_session() as session:
         async with session.begin():
             try:

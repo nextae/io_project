@@ -51,7 +51,7 @@ def apply_selected_fields(
         model: Base,
         selected_fields: set[str]
 ) -> Select:
-    """Adds the options to join-load the selected fields."""
+    """Adds the options to join-load the selected fields for better performance."""
 
     for field in selected_fields:
         sql = sql.options(joinedload(getattr(model, field)))
@@ -65,7 +65,7 @@ def add_selected_fields(
         info_selected_fields: list[SelectedField, InlineFragment, FragmentSpread],
         is_response_union_type: bool = True
 ) -> Select:
-    """Gets the selected fields and adds the options to join-load the selected fields."""
+    """Gets the selected fields and adds the options to join-load the selected fields for better performance."""
 
     selected_fields = get_selected_fields(
         model.__class__.__name__,

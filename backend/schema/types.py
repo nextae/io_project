@@ -8,6 +8,7 @@ from strawberry.types import Info
 from database import models
 from database.connection import get_session
 from utils.broadcast import broadcast
+from .auth import IsAuthenticated
 from .utils import get_selected_fields, apply_selected_fields
 
 __all__ = (
@@ -35,8 +36,11 @@ class Server:
     name: str
     created_at: int
 
-    @field
+    @field(permission_classes=[IsAuthenticated])
     async def channels(self, info: Info) -> list['Channel']:
+        if not self.has_permissions:
+            return []
+
         if self.cached_channels is not None:
             return [Channel.from_model(channel) for channel in self.cached_channels]
 
@@ -50,10 +54,15 @@ class Server:
 
     cached_channels: Private[list['Channel'] | None]
 
-    @field
+    @field(permission_classes=[IsAuthenticated])
     async def members(self, info: Info) -> list['Member']:
+        if not self.has_permissions:
+            return []
+
+        user_id = info.context['user_id']
+
         if self.cached_members is not None:
-            return [Member.from_model(member) for member in self.cached_members]
+            return [Member.from_model(member, has_permissions=member.id == user_id) for member in self.cached_members]
 
         selected_fields = get_selected_fields('Member', info.selected_fields, False)
         async with get_session() as session:
@@ -61,12 +70,19 @@ class Server:
             sql = apply_selected_fields(sql, models.Member, selected_fields)
             db_members = (await session.execute(sql)).scalars().all()
 
-            return [Member.from_model(db_member) for db_member in db_members]
+            return [Member.from_model(db_member, selected_fields, db_member.id == user_id) for db_member in db_members]
 
     cached_members: Private[list['Member'] | None]
 
+    has_permissions: Private[bool]
+
     @classmethod
-    def from_model(cls, model: models.Server, selected_fields: set[str] = None) -> 'Server':
+    def from_model(
+            cls,
+            model: models.Server,
+            selected_fields: set[str] = None,
+            has_permissions: bool = True
+    ) -> 'Server':
         if selected_fields is None:
             selected_fields = set()
 
@@ -75,7 +91,8 @@ class Server:
             name=model.name,
             created_at=int(model.created_at.timestamp()),
             cached_channels=model.channels if 'channels' in selected_fields else None,
-            cached_members=model.members if 'members' in selected_fields else None
+            cached_members=model.members if 'members' in selected_fields else None,
+            has_permissions=has_permissions
         )
 
     async def publish_new_name(self):
@@ -96,7 +113,7 @@ class Channel:
     name: str
     created_at: int
 
-    @field
+    @field(permission_classes=[IsAuthenticated])
     async def server(self, info: Info) -> Server:
         if self.cached_server is not None:
             return Server.from_model(self.cached_server)
@@ -107,11 +124,11 @@ class Channel:
             sql = apply_selected_fields(sql, models.Server, selected_fields)
             db_server = (await session.execute(sql)).scalars().first()
 
-            return Server.from_model(db_server, selected_fields)
+            return Server.from_model(db_server, selected_fields, True)
 
     cached_server: Private[models.Server | None]
 
-    @field
+    @field(permission_classes=[IsAuthenticated])
     async def messages(self, info: Info, limit: int = 100, offset: int = 0) -> list['Message']:
         selected_fields = get_selected_fields('Message', info.selected_fields, False)
         async with get_session() as session:
@@ -160,10 +177,13 @@ class User:
     email: str
     created_at: int
 
-    @field
+    @field(permission_classes=[IsAuthenticated])
     async def servers(self, info: Info) -> list[Server]:
+        if not self.has_permissions:
+            return []
+
         if self.cached_servers is not None:
-            return [Server.from_model(db_server) for db_server in self.cached_servers]
+            return [Server.from_model(db_server, has_permissions=True) for db_server in self.cached_servers]
 
         selected_fields = get_selected_fields('Server', info.selected_fields, False)
         async with get_session() as session:
@@ -177,12 +197,13 @@ class User:
             sql = apply_selected_fields(sql, models.Server, selected_fields)
             db_servers = (await session.execute(sql)).unique().scalars().all()
 
-            return [Server.from_model(db_server) for db_server in db_servers]
+            return [Server.from_model(db_server, selected_fields, True) for db_server in db_servers]
 
     cached_servers: Private[list[models.Server] | None]
+    has_permissions: Private[bool]
 
     @classmethod
-    def from_model(cls, model: models.User, selected_fields: set[str] = None) -> 'User':
+    def from_model(cls, model: models.User, selected_fields: set[str] = None, has_permissions: bool = False) -> 'User':
         if selected_fields is None:
             selected_fields = set()
 
@@ -191,7 +212,8 @@ class User:
             name=model.name,
             email=model.email,
             created_at=int(model.created_at.timestamp()),
-            cached_servers=model.servers if 'servers' in selected_fields else None
+            cached_servers=model.servers if 'servers' in selected_fields else None,
+            has_permissions=has_permissions
         )
 
 
@@ -201,7 +223,26 @@ class Member(User):
     role: Role
     joined_at: int
 
-    @field
+    @field(permission_classes=[IsAuthenticated])
+    async def servers(self, info: Info) -> list[Server]:
+        if not self.has_permissions:
+            return []
+
+        selected_fields = get_selected_fields('Server', info.selected_fields, False)
+        async with get_session() as session:
+            sql = select(models.Server).where(
+                models.Server.id.in_(
+                    select(models.Member.server_id).where(
+                        models.Member.user_id == int(self.id)
+                    )
+                )
+            )
+            sql = apply_selected_fields(sql, models.Server, selected_fields)
+            db_servers = (await session.execute(sql)).unique().scalars().all()
+
+            return [Server.from_model(db_server, selected_fields, True) for db_server in db_servers]
+
+    @field(permission_classes=[IsAuthenticated])
     async def server(self, info: Info) -> Server:
         if self.cached_server is not None:
             return Server.from_model(self.cached_server)
@@ -212,12 +253,12 @@ class Member(User):
             sql = apply_selected_fields(sql, models.Server, selected_fields)
             db_server = (await session.execute(sql)).scalars().first()
 
-            return Server.from_model(db_server, selected_fields)
+            return Server.from_model(db_server, selected_fields, True)
 
     cached_server: Private[models.Server | None]
 
     @classmethod
-    def from_model(cls, model: models.Member, selected_fields: set[str] = None) -> 'Member':
+    def from_model(cls, model: models.Member, selected_fields: set[str] = None, has_permissions: bool = False) -> 'Member':
         if selected_fields is None:
             selected_fields = set()
 
@@ -230,7 +271,8 @@ class Member(User):
             role=model.role,
             joined_at=int(model.joined_at.timestamp()),
             cached_server=model.server,
-            cached_servers=model.servers if 'servers' in selected_fields else None
+            cached_servers=model.servers if 'servers' in selected_fields else None,
+            has_permissions=has_permissions
         )
 
     async def publish_creation(self):
@@ -253,10 +295,12 @@ class Message:
     content: str
     created_at: int
 
-    @field
+    @field(permission_classes=[IsAuthenticated])
     async def author(self, info: Info) -> Member | None:
+        user_id = info.context['user_id']
+
         if self.cached_author is not None:
-            return Member.from_model(self.cached_author)
+            return Member.from_model(self.cached_author, has_permissions=self.cached_author.id == user_id)
 
         selected_fields = get_selected_fields('Member', info.selected_fields)
         async with get_session() as session:
@@ -267,11 +311,11 @@ class Message:
             sql = apply_selected_fields(sql, models.Member, selected_fields)
             db_member = (await session.execute(sql)).scalars().first()
 
-            return Member.from_model(db_member, selected_fields)
+            return Member.from_model(db_member, selected_fields, db_member.id == user_id)
 
     cached_author: Private[models.Member | None]
 
-    @field
+    @field(permission_classes=[IsAuthenticated])
     async def channel(self, info: Info) -> Channel:
         if self.cached_channel is not None:
             return Channel.from_model(self.cached_channel)
@@ -286,10 +330,10 @@ class Message:
 
     cached_channel: Private[models.Channel | None]
 
-    @field
+    @field(permission_classes=[IsAuthenticated])
     async def server(self, info: Info) -> Server:
         if self.cached_server is not None:
-            return Server.from_model(self.cached_server)
+            return Server.from_model(self.cached_server, has_permissions=True)
 
         selected_fields = get_selected_fields('Server', info.selected_fields)
         async with get_session() as session:
@@ -297,7 +341,7 @@ class Message:
             sql = apply_selected_fields(sql, models.Server, selected_fields)
             db_server = (await session.execute(sql)).scalars().first()
 
-            return Server.from_model(db_server, selected_fields)
+            return Server.from_model(db_server, selected_fields, True)
 
     cached_server: Private[models.Server | None]
 
@@ -328,25 +372,23 @@ class Invitation:
     content: str | None
     created_at: int
 
-    @field
-    async def server(self, info: Info) -> Server:
+    @field(permission_classes=[IsAuthenticated])
+    async def server(self) -> Server:
         if self.cached_server is not None:
-            return Server.from_model(self.cached_server)
+            return Server.from_model(self.cached_server, has_permissions=False)
 
-        selected_fields = get_selected_fields('Server', info.selected_fields)
         async with get_session() as session:
             sql = select(models.Server).where(models.Server.id == self.server_id)
-            sql = apply_selected_fields(sql, models.Server, selected_fields)
             db_server = (await session.execute(sql)).scalars().first()
 
-            return Server.from_model(db_server, selected_fields)
+            return Server.from_model(db_server, has_permissions=False)
 
     cached_server: Private[models.Server | None]
 
-    @field
+    @field(permission_classes=[IsAuthenticated])
     async def user(self, info: Info) -> User | None:
         if self.cached_user is not None:
-            return User.from_model(self.cached_user)
+            return User.from_model(self.cached_user, has_permissions=True)
 
         selected_fields = get_selected_fields('User', info.selected_fields)
         async with get_session() as session:
@@ -354,7 +396,7 @@ class Invitation:
             sql = apply_selected_fields(sql, models.User, selected_fields)
             db_user = (await session.execute(sql)).scalars().first()
 
-            return User.from_model(db_user)
+            return User.from_model(db_user, selected_fields, True)
 
     cached_user: Private[models.User | None]
 

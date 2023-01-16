@@ -21,11 +21,15 @@ app.add_middleware(
 
 @app.on_event('startup')
 async def startup_event():
+    """Connects the broadcast on application startup."""
+
     await broadcast.connect()
 
 
 @app.on_event('shutdown')
 async def shutdown_event():
+    """Disconnects the broadcast on application shutdown."""
+
     await broadcast.disconnect()
 
 

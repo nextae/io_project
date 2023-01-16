@@ -33,13 +33,16 @@ class Query:
     async def server(self, info: Info, server_id: int) -> GetServerResponse:
         """Gets a Server. User has to be authenticated and be a Member of that Server."""
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
         async with get_session() as session:
+            # Check if the user is a Member of the Server
             db_member = await get_member(session, server_id, user_id)
             if db_member is None:
                 return NoPermissions()
 
+            # Get the Server from the database
             selected_fields = get_selected_fields('Server', info.selected_fields)
             sql = select(models.Server).where(models.Server.id == server_id)
             sql = apply_selected_fields(sql, models.Server, selected_fields)
@@ -54,13 +57,16 @@ class Query:
     async def channel(self, info: Info, server_id: int, channel_id: int) -> GetChannelResponse:
         """Gets a Channel. User has to be authenticated and be a Member of the Channel's Server."""
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
         async with get_session() as session:
+            # Check if the user is a Member of the Server
             db_member = await get_member(session, server_id, user_id)
             if db_member is None:
                 return NoPermissions()
 
+            # Get the Channel from the database
             db_channel = await get_channel(session, server_id, channel_id, info)
             if db_channel is None:
                 return ChannelNotFound()
@@ -71,13 +77,16 @@ class Query:
     async def first_channel(self, info: Info, server_id: int) -> GetChannelResponse:
         """Gets a Channel. User has to be authenticated and be a Member of the Channel's Server."""
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
         async with get_session() as session:
+            # Check if the user is a Member of the Server
             db_member = await get_member(session, server_id, user_id)
             if db_member is None:
                 return NoPermissions()
 
+            # Get the Channel from the database
             selected_fields = get_selected_fields('Channel', info.selected_fields)
             sql = (
                 select(models.Channel)
@@ -97,13 +106,16 @@ class Query:
     async def message(self, info: Info, server_id: int, channel_id: int, message_id: int) -> GetMessageResponse:
         """Gets a Message. User has to be authenticated and be a Member of the Message's Server."""
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
         async with get_session() as session:
+            # Check if the user is a Member of the Server
             db_member = await get_member(session, server_id, user_id)
             if db_member is None:
                 return NoPermissions()
 
+            # Get the Message from the database
             db_message = await get_message(session, server_id, channel_id, message_id, info)
             if db_message is None:
                 return MessageNotFound()
@@ -121,13 +133,16 @@ class Query:
     ) -> list[Message]:
         """Gets Messages from a Channel. User has to be authenticated and be a Member of the Channel's Server."""
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
         async with get_session() as session:
+            # Check if the user is a Member of the Server
             db_member = await get_member(session, server_id, user_id)
             if db_member is None:
                 return []
 
+            # Get the Messages from the database
             selected_fields = get_selected_fields('Message', info.selected_fields, False)
             sql = (
                 select(models.Message)
@@ -148,13 +163,16 @@ class Query:
     async def member(self, info: Info, server_id: int, user_id: int) -> GetMemberResponse:
         """Gets a Member. User has to be authenticated and be a Member of the same server as the Member."""
 
+        # Get the authenticated user's id
         authenticated_user_id = info.context['user_id']
 
         async with get_session() as session:
+            # Check if the user is a Member of the Server
             db_member = await get_member(session, server_id, authenticated_user_id)
             if db_member is None:
                 return NoPermissions()
 
+            # Get the Member from the database
             selected_fields = get_selected_fields('Member', info.selected_fields)
             sql = select(models.Member).where((models.Member.id == user_id) & (models.Member.server_id == server_id))
             sql = apply_selected_fields(sql, models.Member, selected_fields)
@@ -163,14 +181,16 @@ class Query:
             if db_member is None:
                 return MemberNotFound()
 
-        return Member.from_model(db_member, selected_fields)
+        return Member.from_model(db_member, selected_fields, authenticated_user_id == user_id)
 
     @field(permission_classes=[IsAuthenticated])
     async def invitations(self, info: Info) -> list[Invitation]:
         """Gets Invitations for the User. User has to be authenticated."""
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
+        # Get the Invitations from the database
         selected_fields = get_selected_fields('Invitation', info.selected_fields, False)
         async with get_session() as session:
             sql = select(models.Invitation).where(models.Invitation.user_id == user_id)
@@ -184,8 +204,10 @@ class Query:
     async def current_user(self, info: Info) -> GetUserResponse:
         """Gets the currently authenticated User. User has to be authenticated."""
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
+        # Get the current User from the database
         selected_fields = get_selected_fields('User', info.selected_fields)
         async with get_session() as session:
             sql = select(models.User).where(models.User.id == user_id)
@@ -195,12 +217,13 @@ class Query:
             if db_user is None:
                 return UserNotFound()
 
-        return User.from_model(db_user, selected_fields)
+        return User.from_model(db_user, selected_fields, True)
 
     @field(permission_classes=[IsAuthenticated])
     async def user(self, info: Info, username: str) -> GetUserResponse:
         """Gets a user by the username. User has to be authenticated."""
 
+        # Get the User from the database
         selected_fields = get_selected_fields('User', info.selected_fields)
         async with get_session() as session:
             sql = select(models.User).where(models.User.name.ilike(username))

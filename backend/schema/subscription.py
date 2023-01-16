@@ -24,13 +24,16 @@ class Subscription:
         User has to be authenticated and be a Member of the Server.
         """
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
         async with get_session() as session:
+            # Check if the user is a Member of the Server
             db_member = await get_member(session, server_id, user_id)
             if db_member is None:
                 raise NoPermissionsException('You don\'t have permissions to do this')
 
+        # Subscribe for incoming events
         async with broadcast.subscribe(channel=f'message_channel_{channel_id}') as subscriber:
             async for event in subscriber:
                 yield Message(**orjson.loads(event.message))
@@ -42,13 +45,16 @@ class Subscription:
         User has to be authenticated and be a Member of the Server.
         """
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
         async with get_session() as session:
+            # Check if the user is a Member of the Server
             db_member = await get_member(session, server_id, user_id)
             if db_member is None:
                 raise NoPermissionsException('You don\'t have permissions to do this')
 
+        # Subscribe for incoming events
         async with broadcast.subscribe(channel=f'member_{server_id}') as subscriber:
             async for event in subscriber:
                 yield Member(**orjson.loads(event.message))
@@ -60,13 +66,16 @@ class Subscription:
         User has to be authenticated and be a Member of the Server.
         """
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
         async with get_session() as session:
+            # Check if the user is a Member of the Server
             db_member = await get_member(session, server_id, user_id)
             if db_member is None:
                 raise NoPermissionsException('You don\'t have permissions to do this')
 
+        # Subscribe for incoming events
         async with broadcast.subscribe(channel=f'channel_{server_id}') as subscriber:
             async for event in subscriber:
                 yield Channel(**orjson.loads(event.message))
@@ -78,8 +87,10 @@ class Subscription:
         User has to be authenticated.
         """
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
+        # Subscribe for incoming events
         async with broadcast.subscribe(channel=f'invitation_{user_id}') as subscriber:
             async for event in subscriber:
                 yield Invitation(**orjson.loads(event.message))
@@ -91,13 +102,16 @@ class Subscription:
         User has to be authenticated and be a Member of the Server.
         """
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
         async with get_session() as session:
+            # Check if the user is a Member of the Server
             db_member = await get_member(session, server_id, user_id)
             if db_member is None:
                 raise NoPermissionsException('You don\'t have permissions to do this')
 
+        # Subscribe for incoming events
         async with broadcast.subscribe(channel=f'server_name_{server_id}') as subscriber:
             async for event in subscriber:
                 yield Server(**orjson.loads(event.message))
@@ -109,13 +123,16 @@ class Subscription:
         User has to be authenticated and be a Member of the Server.
         """
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
         async with get_session() as session:
+            # Check if the user is a Member of the Server
             db_member = await get_member(session, server_id, user_id)
             if db_member is None:
                 raise NoPermissionsException('You don\'t have permissions to do this')
 
+        # Subscribe for incoming events
         async with broadcast.subscribe(channel=f'channel_name_{server_id}') as subscriber:
             async for event in subscriber:
                 yield Channel(**orjson.loads(event.message))
@@ -127,13 +144,16 @@ class Subscription:
         User has to be authenticated and be a Member of the Server.
         """
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
         async with get_session() as session:
+            # Check if the user is a Member of the Server
             db_member = await get_member(session, server_id, user_id)
             if db_member is None:
                 raise NoPermissionsException('You don\'t have permissions to do this')
 
+        # Subscribe for incoming events
         async with broadcast.subscribe(channel=f'server_delete_{server_id}') as subscriber:
             async for event in subscriber:
                 yield Server(**orjson.loads(event.message))
@@ -145,13 +165,16 @@ class Subscription:
         User has to be authenticated and be a Member of the Server.
         """
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
         async with get_session() as session:
+            # Check if the user is a Member of the Server
             db_member = await get_member(session, server_id, user_id)
             if db_member is None:
                 raise NoPermissionsException('You don\'t have permissions to do this')
 
+        # Subscribe for incoming events
         async with broadcast.subscribe(channel=f'channel_delete_{server_id}') as subscriber:
             async for event in subscriber:
                 yield Channel(**orjson.loads(event.message))
@@ -163,13 +186,16 @@ class Subscription:
         User has to be authenticated and be a Member of the Server.
         """
 
+        # Get the authenticated user's id
         user_id = info.context['user_id']
 
         async with get_session() as session:
+            # Check if the user is a Member of the Server
             db_member = await get_member(session, server_id, user_id)
             if db_member is None:
                 raise NoPermissionsException('You don\'t have permissions to do this')
 
+        # Subscribe for incoming events
         async with broadcast.subscribe(channel=f'member_delete_{server_id}') as subscriber:
             async for event in subscriber:
                 yield Member(**orjson.loads(event.message))

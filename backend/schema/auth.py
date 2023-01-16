@@ -53,10 +53,23 @@ class IsAuthenticated(BasePermission):
     def has_permission(self, source: Any, info: Info, **kwargs) -> bool:
         """Checks if the user is authenticated and saves the user id in the context."""
 
+        if info.context is None:
+            return False
+
+        # Check the context
+        if 'token' in info.context:
+            user_id = decode_token(info.context['token'])
+            if user_id is None:
+                return False
+
+            info.context['user_id'] = user_id
+            return True
+
         request: Request | WebSocket = info.context['request']
 
         token = None
 
+        # Check the Authorization header
         if 'authorization' in request.headers:
             header = request.headers['authorization']
 
@@ -64,9 +77,7 @@ class IsAuthenticated(BasePermission):
             if bearer.lower() != 'bearer':
                 return False
 
-        elif 'token' in info.context:
-            token = info.context['token']
-
+        # Check the query parameters
         elif 'auth' in request.query_params:
             token = request.query_params['auth']
 
@@ -82,6 +93,8 @@ class IsAuthenticated(BasePermission):
 
 
 class AuthGraphQLWSHandler(GraphQLWSHandler):
+    """Custom Websockets handler to use authentication."""
+
     token: str | None = None
 
     def __init__(self, *args, **kwargs):
@@ -98,6 +111,8 @@ class AuthGraphQLWSHandler(GraphQLWSHandler):
 
 
 class AuthGraphQLTransportWSHandler(GraphQLTransportWSHandler):
+    """Custom Websockets handler to use authentication."""
+
     token: str | None = None
 
     def __init__(self, *args, **kwargs):
