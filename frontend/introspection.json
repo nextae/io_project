@@ -12,6 +12,20 @@
     "types": [
       {
         "kind": "UNION",
+        "name": "AcceptInvitationResponse",
+        "possibleTypes": [
+          {
+            "kind": "OBJECT",
+            "name": "Invitation"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "InvitationNotFound"
+          }
+        ]
+      },
+      {
+        "kind": "UNION",
         "name": "AddChannelResponse",
         "possibleTypes": [
           {
@@ -25,20 +39,14 @@
           {
             "kind": "OBJECT",
             "name": "ChannelNameTooLong"
-          }
-        ]
-      },
-      {
-        "kind": "UNION",
-        "name": "AddMemberResponse",
-        "possibleTypes": [
-          {
-            "kind": "OBJECT",
-            "name": "Member"
           },
           {
             "kind": "OBJECT",
-            "name": "MemberExists"
+            "name": "ChannelNameTooShort"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "NoPermissions"
           }
         ]
       },
@@ -52,7 +60,15 @@
           },
           {
             "kind": "OBJECT",
+            "name": "MessageEmpty"
+          },
+          {
+            "kind": "OBJECT",
             "name": "MessageTooLong"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "NoPermissions"
           }
         ]
       },
@@ -67,8 +83,42 @@
           {
             "kind": "OBJECT",
             "name": "ServerNameTooLong"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "ServerNameTooShort"
           }
         ]
+      },
+      {
+        "kind": "OBJECT",
+        "name": "AuthPayload",
+        "fields": [
+          {
+            "name": "token",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "user",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "User",
+                "ofType": null
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
       },
       {
         "kind": "UNION",
@@ -88,7 +138,15 @@
           },
           {
             "kind": "OBJECT",
+            "name": "ChannelNameTooShort"
+          },
+          {
+            "kind": "OBJECT",
             "name": "ChannelNotFound"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "NoPermissions"
           }
         ]
       },
@@ -103,6 +161,10 @@
           {
             "kind": "OBJECT",
             "name": "MemberNotFound"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "NoPermissions"
           }
         ]
       },
@@ -121,6 +183,10 @@
           {
             "kind": "OBJECT",
             "name": "User"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "UserNotFound"
           }
         ]
       },
@@ -130,11 +196,23 @@
         "possibleTypes": [
           {
             "kind": "OBJECT",
+            "name": "NoPermissions"
+          },
+          {
+            "kind": "OBJECT",
             "name": "Server"
           },
           {
             "kind": "OBJECT",
             "name": "ServerNameTooLong"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "ServerNameTooShort"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "ServerNotFound"
           }
         ]
       },
@@ -288,6 +366,29 @@
       },
       {
         "kind": "OBJECT",
+        "name": "ChannelNameTooShort",
+        "fields": [
+          {
+            "name": "message",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": [
+          {
+            "kind": "INTERFACE",
+            "name": "Error"
+          }
+        ]
+      },
+      {
+        "kind": "OBJECT",
         "name": "ChannelNotFound",
         "fields": [
           {
@@ -310,6 +411,43 @@
         ]
       },
       {
+        "kind": "OBJECT",
+        "name": "ContentTooLong",
+        "fields": [
+          {
+            "name": "message",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": [
+          {
+            "kind": "INTERFACE",
+            "name": "Error"
+          }
+        ]
+      },
+      {
+        "kind": "UNION",
+        "name": "DeclineInvitationResponse",
+        "possibleTypes": [
+          {
+            "kind": "OBJECT",
+            "name": "Invitation"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "InvitationNotFound"
+          }
+        ]
+      },
+      {
         "kind": "UNION",
         "name": "DeleteChannelResponse",
         "possibleTypes": [
@@ -320,6 +458,10 @@
           {
             "kind": "OBJECT",
             "name": "ChannelNotFound"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "NoPermissions"
           }
         ]
       },
@@ -334,6 +476,10 @@
           {
             "kind": "OBJECT",
             "name": "MemberNotFound"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "NoPermissions"
           }
         ]
       },
@@ -341,6 +487,10 @@
         "kind": "UNION",
         "name": "DeleteServerResponse",
         "possibleTypes": [
+          {
+            "kind": "OBJECT",
+            "name": "NoPermissions"
+          },
           {
             "kind": "OBJECT",
             "name": "Server"
@@ -416,7 +566,15 @@
           },
           {
             "kind": "OBJECT",
+            "name": "ChannelNameTooShort"
+          },
+          {
+            "kind": "OBJECT",
             "name": "ChannelNotFound"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "ContentTooLong"
           },
           {
             "kind": "OBJECT",
@@ -432,11 +590,23 @@
           },
           {
             "kind": "OBJECT",
+            "name": "InvitationExists"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "InvitationNotFound"
+          },
+          {
+            "kind": "OBJECT",
             "name": "MemberExists"
           },
           {
             "kind": "OBJECT",
             "name": "MemberNotFound"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "MessageEmpty"
           },
           {
             "kind": "OBJECT",
@@ -448,11 +618,19 @@
           },
           {
             "kind": "OBJECT",
+            "name": "NoPermissions"
+          },
+          {
+            "kind": "OBJECT",
             "name": "PasswordTooShort"
           },
           {
             "kind": "OBJECT",
             "name": "ServerNameTooLong"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "ServerNameTooShort"
           },
           {
             "kind": "OBJECT",
@@ -479,6 +657,10 @@
           {
             "kind": "OBJECT",
             "name": "ChannelNotFound"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "NoPermissions"
           }
         ]
       },
@@ -493,6 +675,10 @@
           {
             "kind": "OBJECT",
             "name": "MemberNotFound"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "NoPermissions"
           }
         ]
       },
@@ -507,6 +693,10 @@
           {
             "kind": "OBJECT",
             "name": "MessageNotFound"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "NoPermissions"
           }
         ]
       },
@@ -514,6 +704,10 @@
         "kind": "UNION",
         "name": "GetServerResponse",
         "possibleTypes": [
+          {
+            "kind": "OBJECT",
+            "name": "NoPermissions"
+          },
           {
             "kind": "OBJECT",
             "name": "Server"
@@ -585,16 +779,161 @@
         ]
       },
       {
+        "kind": "OBJECT",
+        "name": "Invitation",
+        "fields": [
+          {
+            "name": "content",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Any"
+            },
+            "args": []
+          },
+          {
+            "name": "createdAt",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "server",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Server",
+                "ofType": null
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "serverId",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "user",
+            "type": {
+              "kind": "OBJECT",
+              "name": "User",
+              "ofType": null
+            },
+            "args": []
+          },
+          {
+            "name": "userId",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": []
+      },
+      {
+        "kind": "OBJECT",
+        "name": "InvitationExists",
+        "fields": [
+          {
+            "name": "message",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": [
+          {
+            "kind": "INTERFACE",
+            "name": "Error"
+          }
+        ]
+      },
+      {
+        "kind": "OBJECT",
+        "name": "InvitationNotFound",
+        "fields": [
+          {
+            "name": "message",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": [
+          {
+            "kind": "INTERFACE",
+            "name": "Error"
+          }
+        ]
+      },
+      {
+        "kind": "UNION",
+        "name": "InviteUserResponse",
+        "possibleTypes": [
+          {
+            "kind": "OBJECT",
+            "name": "ContentTooLong"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "Invitation"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "InvitationExists"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "MemberExists"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "NoPermissions"
+          },
+          {
+            "kind": "OBJECT",
+            "name": "UserNotFound"
+          }
+        ]
+      },
+      {
         "kind": "UNION",
         "name": "LoginResponse",
         "possibleTypes": [
           {
             "kind": "OBJECT",
-            "name": "InvalidLoginData"
+            "name": "AuthPayload"
           },
           {
             "kind": "OBJECT",
-            "name": "User"
+            "name": "InvalidLoginData"
           }
         ]
       },
@@ -866,6 +1205,29 @@
       },
       {
         "kind": "OBJECT",
+        "name": "MessageEmpty",
+        "fields": [
+          {
+            "name": "message",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": [
+          {
+            "kind": "INTERFACE",
+            "name": "Error"
+          }
+        ]
+      },
+      {
+        "kind": "OBJECT",
         "name": "MessageNotFound",
         "fields": [
           {
@@ -915,6 +1277,29 @@
         "name": "Mutation",
         "fields": [
           {
+            "name": "acceptInvitation",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "UNION",
+                "name": "AcceptInvitationResponse",
+                "ofType": null
+              }
+            },
+            "args": [
+              {
+                "name": "serverId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              }
+            ]
+          },
+          {
             "name": "addChannel",
             "type": {
               "kind": "NON_NULL",
@@ -937,49 +1322,6 @@
               },
               {
                 "name": "serverId",
-                "type": {
-                  "kind": "NON_NULL",
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "Any"
-                  }
-                }
-              }
-            ]
-          },
-          {
-            "name": "addMember",
-            "type": {
-              "kind": "NON_NULL",
-              "ofType": {
-                "kind": "UNION",
-                "name": "AddMemberResponse",
-                "ofType": null
-              }
-            },
-            "args": [
-              {
-                "name": "role",
-                "type": {
-                  "kind": "NON_NULL",
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "Any"
-                  }
-                }
-              },
-              {
-                "name": "serverId",
-                "type": {
-                  "kind": "NON_NULL",
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "Any"
-                  }
-                }
-              },
-              {
-                "name": "userId",
                 "type": {
                   "kind": "NON_NULL",
                   "ofType": {
@@ -1023,16 +1365,6 @@
               },
               {
                 "name": "serverId",
-                "type": {
-                  "kind": "NON_NULL",
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "Any"
-                  }
-                }
-              },
-              {
-                "name": "userId",
                 "type": {
                   "kind": "NON_NULL",
                   "ofType": {
@@ -1182,16 +1514,6 @@
                     "name": "Any"
                   }
                 }
-              },
-              {
-                "name": "userId",
-                "type": {
-                  "kind": "NON_NULL",
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "Any"
-                  }
-                }
               }
             ]
           },
@@ -1229,6 +1551,39 @@
             ]
           },
           {
+            "name": "declineInvitation",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "UNION",
+                "name": "DeclineInvitationResponse",
+                "ofType": null
+              }
+            },
+            "args": [
+              {
+                "name": "serverId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              },
+              {
+                "name": "userId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              }
+            ]
+          },
+          {
             "name": "deleteChannel",
             "type": {
               "kind": "NON_NULL",
@@ -1248,32 +1603,9 @@
                     "name": "Any"
                   }
                 }
-              }
-            ]
-          },
-          {
-            "name": "deleteMember",
-            "type": {
-              "kind": "NON_NULL",
-              "ofType": {
-                "kind": "UNION",
-                "name": "DeleteMemberResponse",
-                "ofType": null
-              }
-            },
-            "args": [
-              {
-                "name": "serverId",
-                "type": {
-                  "kind": "NON_NULL",
-                  "ofType": {
-                    "kind": "SCALAR",
-                    "name": "Any"
-                  }
-                }
               },
               {
-                "name": "userId",
+                "name": "serverId",
                 "type": {
                   "kind": "NON_NULL",
                   "ofType": {
@@ -1317,9 +1649,97 @@
                 "ofType": null
               }
             },
+            "args": []
+          },
+          {
+            "name": "inviteUser",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "UNION",
+                "name": "InviteUserResponse",
+                "ofType": null
+              }
+            },
             "args": [
               {
+                "name": "content",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              },
+              {
+                "name": "serverId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              },
+              {
                 "name": "userId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "kickMember",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "UNION",
+                "name": "DeleteMemberResponse",
+                "ofType": null
+              }
+            },
+            "args": [
+              {
+                "name": "serverId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              },
+              {
+                "name": "userId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "leaveServer",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "UNION",
+                "name": "DeleteMemberResponse",
+                "ofType": null
+              }
+            },
+            "args": [
+              {
+                "name": "serverId",
                 "type": {
                   "kind": "NON_NULL",
                   "ofType": {
@@ -1411,6 +1831,29 @@
       },
       {
         "kind": "OBJECT",
+        "name": "NoPermissions",
+        "fields": [
+          {
+            "name": "message",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": [
+          {
+            "kind": "INTERFACE",
+            "name": "Error"
+          }
+        ]
+      },
+      {
+        "kind": "OBJECT",
         "name": "PasswordTooShort",
         "fields": [
           {
@@ -1456,8 +1899,30 @@
                     "name": "Any"
                   }
                 }
+              },
+              {
+                "name": "serverId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
               }
             ]
+          },
+          {
+            "name": "currentUser",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "UNION",
+                "name": "GetUserResponse",
+                "ofType": null
+              }
+            },
+            "args": []
           },
           {
             "name": "firstChannel",
@@ -1481,6 +1946,24 @@
                 }
               }
             ]
+          },
+          {
+            "name": "invitations",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "LIST",
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "Invitation",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "args": []
           },
           {
             "name": "member",
@@ -1527,7 +2010,27 @@
             },
             "args": [
               {
+                "name": "channelId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              },
+              {
                 "name": "messageId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              },
+              {
+                "name": "serverId",
                 "type": {
                   "kind": "NON_NULL",
                   "ofType": {
@@ -1584,6 +2087,16 @@
                     "name": "Any"
                   }
                 }
+              },
+              {
+                "name": "serverId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
               }
             ]
           },
@@ -1622,7 +2135,7 @@
             },
             "args": [
               {
-                "name": "userId",
+                "name": "username",
                 "type": {
                   "kind": "NON_NULL",
                   "ofType": {
@@ -1642,15 +2155,15 @@
         "possibleTypes": [
           {
             "kind": "OBJECT",
+            "name": "AuthPayload"
+          },
+          {
+            "kind": "OBJECT",
             "name": "EmailExists"
           },
           {
             "kind": "OBJECT",
             "name": "PasswordTooShort"
-          },
-          {
-            "kind": "OBJECT",
-            "name": "User"
           },
           {
             "kind": "OBJECT",
@@ -1759,6 +2272,29 @@
       },
       {
         "kind": "OBJECT",
+        "name": "ServerNameTooShort",
+        "fields": [
+          {
+            "name": "message",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Any"
+              }
+            },
+            "args": []
+          }
+        ],
+        "interfaces": [
+          {
+            "kind": "INTERFACE",
+            "name": "Error"
+          }
+        ]
+      },
+      {
+        "kind": "OBJECT",
         "name": "ServerNotFound",
         "fields": [
           {
@@ -1785,6 +2321,133 @@
         "name": "Subscription",
         "fields": [
           {
+            "name": "deletedChannel",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Channel",
+                "ofType": null
+              }
+            },
+            "args": [
+              {
+                "name": "serverId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "deletedMember",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Member",
+                "ofType": null
+              }
+            },
+            "args": [
+              {
+                "name": "serverId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "deletedServer",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Server",
+                "ofType": null
+              }
+            },
+            "args": [
+              {
+                "name": "serverId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "newChannel",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Channel",
+                "ofType": null
+              }
+            },
+            "args": [
+              {
+                "name": "serverId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "name": "newInvitation",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Invitation",
+                "ofType": null
+              }
+            },
+            "args": []
+          },
+          {
+            "name": "newMember",
+            "type": {
+              "kind": "NON_NULL",
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "Member",
+                "ofType": null
+              }
+            },
+            "args": [
+              {
+                "name": "serverId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              }
+            ]
+          },
+          {
             "name": "newMessage",
             "type": {
               "kind": "NON_NULL",
@@ -1797,6 +2460,16 @@
             "args": [
               {
                 "name": "channelId",
+                "type": {
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Any"
+                  }
+                }
+              },
+              {
+                "name": "serverId",
                 "type": {
                   "kind": "NON_NULL",
                   "ofType": {

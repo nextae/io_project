@@ -1,14 +1,14 @@
-import { createContext, ReactNode, useContext, useState } from "react";
+import { createContext, ReactNode, useContext, useMemo, useState } from "react";
 import { Navigate } from "react-router-dom";
 
-type AuthState =
+export type AuthState =
   | { state: "unauthenticated" }
-  | { state: "authenticated"; user: number };
+  | { state: "authenticated"; token: string; userId: number };
 
-interface AuthContextType {
+export interface AuthContextType {
   state: AuthState;
   actions: {
-    logIn: (user: number) => void;
+    logIn: (token: string, userId: number) => void;
     logOut: () => void;
   };
 }
@@ -24,7 +24,7 @@ export function useAuth() {
 export function useUser() {
   const { state } = useAuth();
   if (state.state === "authenticated") {
-    return state.user;
+    return state.userId;
   }
   throw new Error("User is not authenticated");
 }
@@ -39,25 +39,28 @@ export function RequireAuth({ children }: { children: ReactNode }) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>(() => {
+    const token = localStorage.getItem("token");
     const userId = localStorage.getItem("userId");
-    return userId
-      ? { state: "authenticated", user: +userId }
+    return (token && userId)
+      ? { state: "authenticated", token: token, userId: +userId }
       : { state: "unauthenticated" };
   });
 
-  const context: AuthContextType = {
+  const context = useMemo<AuthContextType>(() => ({
     state,
     actions: {
-      logIn(userId: number) {
+      logIn(token: string, userId: number) {
+        localStorage.setItem("token", token);
         localStorage.setItem("userId", userId.toString());
-        setState({ state: "authenticated", user: userId });
+        setState({ state: "authenticated", token: token, userId: userId });
       },
       logOut() {
+        localStorage.removeItem("token");
         localStorage.removeItem("userId");
         setState({ state: "unauthenticated" });
       },
     },
-  };
+  }), [state]);
 
   return (
     <AuthContext.Provider value={context}>{children}</AuthContext.Provider>

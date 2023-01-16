@@ -1,0 +1,37 @@
+.overlay {
+  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  position: fixed;
+}
+
+.dialog {
+  background-color: #1f1e1e;
+  border-radius: 8px;
+  left: 50%;
+  max-width: 30rem;
+  outline: 4px solid rgb(65, 65, 65);
+  padding: 1.8rem 2rem;
+  position: fixed;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+}
+
+.dialog form {
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog h2 {
+  margin-bottom: 1rem;
+  color: #ffffffe0;
+  font-size: 1.4rem;
+}
+
+.actions {
+  align-self: end;
+}
+
+.actions button + button {
+  margin-left: 0.4rem;
+}

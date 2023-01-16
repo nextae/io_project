@@ -1,18 +1,23 @@
-union AddChannelResponse = Channel | ChannelNameExists | ChannelNameTooLong
+union AcceptInvitationResponse = Invitation | InvitationNotFound
 
-union AddMemberResponse = Member | MemberExists
+union AddChannelResponse = Channel | ChannelNameExists | ChannelNameTooShort | ChannelNameTooLong | NoPermissions
 
-union AddMessageResponse = Message | MessageTooLong
+union AddMessageResponse = Message | MessageTooLong | MessageEmpty | NoPermissions
 
-union AddServerResponse = Server | ServerNameTooLong
+union AddServerResponse = Server | ServerNameTooLong | ServerNameTooShort
 
-union ChangeChannelNameResponse = Channel | ChannelNameTooLong | ChannelNameExists | ChannelNotFound
+type AuthPayload {
+  token: String!
+  user: User!
+}
 
-union ChangeMemberRoleResponse = Member | MemberNotFound
+union ChangeChannelNameResponse = Channel | ChannelNameTooLong | ChannelNameTooShort | ChannelNameExists | ChannelNotFound | NoPermissions
 
-union ChangePasswordResponse = User | InvalidPassword | PasswordTooShort
+union ChangeMemberRoleResponse = Member | MemberNotFound | NoPermissions
 
-union ChangeServerNameResponse = Server | ServerNameTooLong
+union ChangePasswordResponse = User | UserNotFound | InvalidPassword | PasswordTooShort
+
+union ChangeServerNameResponse = Server | ServerNotFound | ServerNameTooLong | ServerNameTooShort | NoPermissions
 
 type Channel {
   id: ID!
@@ -31,15 +36,25 @@ type ChannelNameTooLong implements Error {
   message: String!
 }
 
+type ChannelNameTooShort implements Error {
+  message: String!
+}
+
 type ChannelNotFound implements Error {
   message: String!
 }
 
-union DeleteChannelResponse = Channel | ChannelNotFound
+type ContentTooLong implements Error {
+  message: String!
+}
 
-union DeleteMemberResponse = Member | MemberNotFound
+union DeclineInvitationResponse = Invitation | InvitationNotFound
 
-union DeleteServerResponse = Server | ServerNotFound
+union DeleteChannelResponse = Channel | ChannelNotFound | NoPermissions
+
+union DeleteMemberResponse = Member | MemberNotFound | NoPermissions
+
+union DeleteServerResponse = Server | ServerNotFound | NoPermissions
 
 union DeleteUserResponse = User | UserNotFound
 
@@ -51,13 +66,13 @@ interface Error {
   message: String!
 }
 
-union GetChannelResponse = Channel | ChannelNotFound
+union GetChannelResponse = Channel | ChannelNotFound | NoPermissions
 
-union GetMemberResponse = Member | MemberNotFound
+union GetMemberResponse = Member | MemberNotFound | NoPermissions
 
-union GetMessageResponse = Message | MessageNotFound
+union GetMessageResponse = Message | MessageNotFound | NoPermissions
 
-union GetServerResponse = Server | ServerNotFound
+union GetServerResponse = Server | ServerNotFound | NoPermissions
 
 union GetUserResponse = User | UserNotFound
 
@@ -69,7 +84,26 @@ type InvalidPassword implements Error {
   message: String!
 }
 
-union LoginResponse = User | InvalidLoginData
+type Invitation {
+  serverId: Int!
+  userId: Int!
+  content: String
+  createdAt: Int!
+  server: Server!
+  user: User
+}
+
+type InvitationExists implements Error {
+  message: String!
+}
+
+type InvitationNotFound implements Error {
+  message: String!
+}
+
+union InviteUserResponse = Invitation | ContentTooLong | MemberExists | InvitationExists | UserNotFound | NoPermissions
+
+union LoginResponse = AuthPayload | InvalidLoginData
 
 type Member {
   id: ID!
@@ -103,6 +137,10 @@ type Message {
   server: Server!
 }
 
+type MessageEmpty implements Error {
+  message: String!
+}
+
 type MessageNotFound implements Error {
   message: String!
 }
@@ -116,16 +154,23 @@ type Mutation {
   changeServerName(serverId: Int!, newName: String!): ChangeServerNameResponse!
   deleteServer(serverId: Int!): DeleteServerResponse!
   addChannel(serverId: Int!, name: String!): AddChannelResponse!
-  addMember(serverId: Int!, userId: Int!, role: Role! = MEMBER): AddMemberResponse!
   changeMemberRole(serverId: Int!, userId: Int!, newRole: Role!): ChangeMemberRoleResponse!
-  deleteMember(serverId: Int!, userId: Int!): DeleteMemberResponse!
+  kickMember(serverId: Int!, userId: Int!): DeleteMemberResponse!
+  leaveServer(serverId: Int!): DeleteMemberResponse!
   changeChannelName(serverId: Int!, channelId: Int!, newName: String!): ChangeChannelNameResponse!
-  deleteChannel(channelId: Int!): DeleteChannelResponse!
+  deleteChannel(serverId: Int!, channelId: Int!): DeleteChannelResponse!
   register(username: String!, password: String!, email: String!): RegisterResponse!
   login(username: String!, password: String!): LoginResponse!
-  changePassword(userId: Int!, oldPassword: String!, newPassword: String!): ChangePasswordResponse!
-  deleteUser(userId: Int!): DeleteUserResponse!
-  addMessage(serverId: Int!, channelId: Int!, userId: Int!, content: String!): AddMessageResponse!
+  changePassword(oldPassword: String!, newPassword: String!): ChangePasswordResponse!
+  deleteUser: DeleteUserResponse!
+  addMessage(serverId: Int!, channelId: Int!, content: String!): AddMessageResponse!
+  inviteUser(serverId: Int!, userId: Int!, content: String!): InviteUserResponse!
+  acceptInvitation(serverId: Int!): AcceptInvitationResponse!
+  declineInvitation(serverId: Int!, userId: Int!): DeclineInvitationResponse!
+}
+
+type NoPermissions implements Error {
+  message: String!
 }
 
 type PasswordTooShort implements Error {
@@ -134,15 +179,17 @@ type PasswordTooShort implements Error {
 
 type Query {
   server(serverId: Int!): GetServerResponse!
-  channel(channelId: Int!): GetChannelResponse!
+  channel(serverId: Int!, channelId: Int!): GetChannelResponse!
   firstChannel(serverId: Int!): GetChannelResponse!
-  user(userId: Int!): GetUserResponse!
-  message(messageId: Int!): GetMessageResponse!
-  messages(channelId: Int!, limit: Int! = 100, offset: Int! = 0): [Message!]!
+  message(serverId: Int!, channelId: Int!, messageId: Int!): GetMessageResponse!
+  messages(serverId: Int!, channelId: Int!, limit: Int! = 100, offset: Int! = 0): [Message!]!
   member(serverId: Int!, userId: Int!): GetMemberResponse!
+  invitations: [Invitation!]!
+  currentUser: GetUserResponse!
+  user(username: String!): GetUserResponse!
 }
 
-union RegisterResponse = User | UserNameExists | EmailExists | PasswordTooShort
+union RegisterResponse = AuthPayload | UserNameExists | EmailExists | PasswordTooShort
 
 enum Role {
   OWNER
@@ -162,14 +209,24 @@ type ServerNameTooLong implements Error {
   message: String!
 }
 
+type ServerNameTooShort implements Error {
+  message: String!
+}
+
 type ServerNotFound implements Error {
   message: String!
 }
 
 type Subscription {
-  newMessage(channelId: Int!): Message!
+  newMessage(serverId: Int!, channelId: Int!): Message!
+  newMember(serverId: Int!): Member!
+  newChannel(serverId: Int!): Channel!
+  newInvitation: Invitation!
   updatedServerName(serverId: Int!): Server!
   updatedChannelName(serverId: Int!): Channel!
+  deletedServer(serverId: Int!): Server!
+  deletedChannel(serverId: Int!): Channel!
+  deletedMember(serverId: Int!): Member!
 }
 
 type User {

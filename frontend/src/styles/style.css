@@ -1,5 +1,4 @@
 @import url("https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700&display=swap");
-@import url("tweaks.css");
 
 * {
   margin: 0;
@@ -31,14 +30,15 @@ body {
 .container .leftSide {
   position: relative;
   flex: 20%;
-  max-width: 300px;
+  /* max-width: 300px; */
   /* background: #fff; */
   background: rgba(21, 19, 19, 0.88);
   border-right: 1px solid #000;
 }
 .container .centerBox {
   position: relative;
-  max-width: calc(100%-600px);
+  flex: 60%;
+  /* max-width: calc(100%-600px); */
   /* flex: 60%; */
   /* background: #e5ddd5; */
   background: rgb(0, 0, 0);
@@ -47,7 +47,7 @@ body {
 .container .rightSide {
   position: relative;
   flex: 20%;
-  max-width: 300px;
+  /* max-width: 300px; */
   background: rgba(21, 19, 19, 0.88);
   border-left: 1px solid #000;
 }
@@ -131,6 +131,7 @@ body {
   border: none;
   /* background: #fff; */
   background: rgba(80, 79, 79, 0.394);
+  color: white;
   padding: 6px;
   height: 38px;
   border-radius: 14px;
@@ -155,9 +156,9 @@ body {
 
 .chatlist {
   position: relative;
-  height: calc(100%-110px);
+  height: calc(100% - 110px);
   /* 110px = 50px search_chat + 60px header  */
-  /* overflow-y: auto; */
+  overflow-y: auto;
   /* overflow-x: hidden; */
   /* background: rgb(176, 176, 176); */
   /* opacity: 0.56; */
@@ -351,7 +352,6 @@ body {
 }
 
 .message p .nickname {
-  display: block;
   margin-bottom: 2.5px;
   font-size: 0.85em;
   opacity: 0.5;

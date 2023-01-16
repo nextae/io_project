@@ -1,15 +1,25 @@
-type Result<T> =
+import { useEffect } from "react";
+
+export type Result<T> =
   | { isError: true; error: string; data?: never }
   | { isError: false; error?: never; data: T };
 
-type OperationResult<Data> = {
+export type OperationResult<Data> = {
   data?: Data;
   error?: {
     message: string;
   };
 };
 
-export function propagateError<Data, Valid extends object>(
+/**
+ * Validates the result of a GraphQL operation.
+ * If the operation was successful, the validator function is called to validate the data.
+ * Otherwise, the error is returned.
+ *
+ * @param result GraphQL operation result
+ * @param validator returns a string if the data is invalid, otherwise returns the valid data
+ */
+export function validateResult<Data, Valid extends object>(
   result: OperationResult<Data>,
   validator: (result: Data) => string | Valid
 ): Result<Valid> {
@@ -25,5 +35,15 @@ export function propagateError<Data, Valid extends object>(
     return { isError: false, data: validationResult };
   }
 
+  console.debug("unknown error: %o", result);
   return { isError: true, error: "Unknown error" };
+}
+
+/**
+ * Sets the document title.
+ */
+export function useDocumentTitle(title: string) {
+  useEffect(() => {
+    document.title = title;
+  }, [title]);
 }
